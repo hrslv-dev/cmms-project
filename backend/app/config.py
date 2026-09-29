@@ -3,8 +3,9 @@ import psycopg2
 from dotenv import load_dotenv
 
 # Carrega as variavéis do arquivo .env para o ambiente de processo python 
-load_dotenv(dotenv_path='configs/.env')
+load_dotenv()
 
+# Define as variaveis de ambiente para o mundo python 
 DB_HOST= os.getenv('DB_HOST')  
 DB_PORT= os.getenv('DB_PORT')
 DB_NAME= os.getenv('DB_NAME')
