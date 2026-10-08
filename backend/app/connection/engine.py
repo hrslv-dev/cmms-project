@@ -1,6 +1,7 @@
 from connection import Connection
 from sqlalchemy import create_engine
 import psycopg2
+import sqlalchemy
 
 class Engine: 
     
@@ -10,8 +11,9 @@ class Engine:
         engine = create_engine(
             # URL é o link correspondente ao banco de dados POSTGRES usando driver PYSCOPG2
             url,
-            # Definição do Driver da engine SQLALCHEMY 
-            poolclass=psycopg2.extensions.connection, 
+            # Definição do Driver da engine SQLALCHEMY
+            # PoolClass -> QueuePool  
+            poolclass=, 
             # Quantidade de pools
             pool_size=5, 
             # Quantidade máxima de conexões temporárias caso as 5 pools estiverem ocupadas
