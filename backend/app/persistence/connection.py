@@ -37,15 +37,3 @@ class Connection:
             print("Erro ao tentar se conectar ao banco de dados")
             return None
 
-    # Gera a url do banco de dados usando como driver o psycopg2 
-    @staticmethod
-    def get_database_url(): 
-        creds = Connection.load_envar()
-        url = ( 
-            f"postgresql+psycopg2://"
-            f"{creds['DB_USER']}:{creds['DB_PASSWORD']}"
-            f"@{creds['DB_HOST']}:{creds['DB_PORT']}"
-            f"/{creds['DB_NAME']}"
-        )
-        return url
-
