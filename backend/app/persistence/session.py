@@ -18,7 +18,7 @@ class Session:
         if engine is None:
             from .engine import Engine
 
-            engine = Engine.create_engine_sqlalchemy()
+            engine = Engine.engine_factory()
 
         return sessionmaker(bind=engine, autoflush=False,autocommit=False)
 

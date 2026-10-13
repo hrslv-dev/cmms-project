@@ -21,7 +21,7 @@ class Engine:
         )
         return url 
 
-    def create_engine_sqlalchemy(): 
+    def engine_factory():
         url = Engine.generate_url
         engine = create_engine(
             # URL é o link correspondente ao banco de dados POSTGRES usando driver PYSCOPG2
