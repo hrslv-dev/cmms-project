@@ -1,4 +1,4 @@
-from connection import Connection
+from config import Config
 from sqlalchemy import create_engine
 from sqlalchemy import QueuePool
 from sqlalchemy.engine import URL 
@@ -7,11 +7,11 @@ class Engine_factory:
 
     def __init__(self):
         pass
-        
+
     @staticmethod
     def generate_url(): 
-        creds = Connection.load_envar()
-        url = URL.create( 
+        creds = Config.load_envar()
+        url = URL.create(
             drivername="postgresql", 
             username=creds["DB_USER"], 
             password=creds["DB_PASSWORD"], 
@@ -22,12 +22,9 @@ class Engine_factory:
         return url 
 
     def create_db_engine():
-        url = Engine_factory.generate_url
+        url = Engine_factory.generate_url()
         engine = create_engine(
-            # URL é o link correspondente ao banco de dados POSTGRES usando driver PYSCOPG2
             url,
-            # A poolclass por padrão já é QueuePool
-            # Quantidade de pools
             pool_size=5, 
             # Quantidade máxima de conexões temporárias caso as 5 pools estiverem ocupadas
             max_overflow=10,
