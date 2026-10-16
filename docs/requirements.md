@@ -110,7 +110,6 @@ O sistema deve permitir informar o técnico responsável pela execução da manu
 O sistema deve permitir classificar a manutenção. Inicialmente:
 - Corretiva
 - Preventiva
-- Preditiva (se mantida na V1)
 
 #### RF16 — Registrar problema
 O sistema deve permitir registrar o problema ou falha identificada.
@@ -281,7 +280,6 @@ Validação de integridade referencial para técnicos.
 As categorias permitidas são:
 - Corretiva
 - Preventiva
-- Preditiva
 
 ### RN11 — A data da manutenção deve ser válida
 A data informada deve ser uma data válida e respeitar as restrições do negócio.

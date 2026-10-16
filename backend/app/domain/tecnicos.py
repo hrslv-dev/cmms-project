@@ -8,7 +8,7 @@ estrutura para que o restante do sistema possa salvar e consultar os cadastros.
 
 from sqlalchemy import CheckConstraint, Integer, PrimaryKeyConstraint, String
 from sqlalchemy.orm import Mapped, mapped_column
-
+from sqlalchemy import Identity
 from .base import Base
 
 
@@ -44,11 +44,11 @@ class Tecnico(Base):
     __table_args__ = (
         CheckConstraint(
             "funcao IN ('Mecânico', 'Eletricista')",
-            name="chk_tencicos_funcao",
+            name="chk_tecnicos_funcao",
         ),
         PrimaryKeyConstraint("id", name="pk_tecnicos"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, autoincrement=True, nullable=False)
-    nome: Mapped[str] = mapped_column(String, nullable=False)
-    funcao: Mapped[str] = mapped_column(String, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, Identity, nullable=False)
+    nome: Mapped[str] = mapped_column(String(100), nullable=False)
+    funcao: Mapped[str] = mapped_column(String(200), nullable=False)
