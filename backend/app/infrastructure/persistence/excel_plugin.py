@@ -9,6 +9,11 @@ from sqlalchemy.engine import URL
 
 
 def _env_bool(name: str, default: bool) -> bool:
+    """Converte texto de ambiente em booleano; lança `ValueError` se inválido.
+
+    Considera verdadeiros `1/true/yes/on` e falsos `0/false/no/off`, ignorando
+    maiúsculas e espaços externos. Usa `default` quando a variável não existe.
+    """
     value = os.getenv(name)
     if value is None:
         return default
@@ -20,7 +25,12 @@ def _env_bool(name: str, default: bool) -> bool:
 
 @dataclass(frozen=True)
 class ExcelDialectConfig:
-    """Configuração do driver DB-API e das opções encaminhadas pelo dialeto."""
+    """Agrupa o driver `excel-dbapi` e opções do dialeto para o workbook local.
+
+    Os valores padrão selecionam openpyxl, permitem criar arquivo ausente,
+    leem fórmulas, sanitizam fórmulas e habilitam bloqueio local do arquivo.
+    A instância é imutável.
+    """
 
     dbapi_engine: str = "openpyxl"
     create_if_missing: bool = True
@@ -30,6 +40,11 @@ class ExcelDialectConfig:
 
     @classmethod
     def from_env(cls) -> "ExcelDialectConfig":
+        """Carrega as opções do dialeto a partir do ambiente e do `.env` vizinho.
+
+        Usa `CMMS_EXCEL_DBAPI_ENGINE` e as variáveis `CMMS_EXCEL_*` booleanas.
+        Um valor booleano fora dos formatos aceitos causa `ValueError`.
+        """
         load_dotenv(dotenv_path=Path(__file__).with_name(".env"))
         return cls(
             dbapi_engine=os.getenv("CMMS_EXCEL_DBAPI_ENGINE", "openpyxl"),
@@ -40,6 +55,11 @@ class ExcelDialectConfig:
         )
 
     def build_url(self, workbook_path: str) -> URL:
+        """Monta a URL SQLAlchemy `excel` para o arquivo informado.
+
+        Inclui o caminho, o nome do backend DB-API e `autocommit=false`, para
+        que alterações sejam confirmadas explicitamente. Não abre o arquivo.
+        """
         return URL.create(
             drivername="excel",
             database=workbook_path,
@@ -50,6 +70,11 @@ class ExcelDialectConfig:
         )
 
     def build_connect_args(self) -> dict[str, bool]:
+        """Retorna opções de criação, leitura, sanitização e locking para o DB-API.
+
+        Esses parâmetros são passados por `create_engine(connect_args=...)`,
+        pois o dialeto sqlalchemy-excel 0.4.x não os encaminha a partir da URL.
+        """
         # excel-dbapi recebe essas opções diretamente; sqlalchemy-excel 0.4.x
         # não encaminha esses parâmetros da query string do URL.
         return {

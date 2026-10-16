@@ -3,13 +3,20 @@ from sqlalchemy import create_engine
 from sqlalchemy import QueuePool
 from sqlalchemy.engine import URL 
 
-class Engine_factory: 
+class Engine_factory:
+    """Monta URL e engine SQLAlchemy para a conexão PostgreSQL do CMMS."""
 
     def __init__(self):
+        """Inicializador sem estado; a factory pode ser chamada diretamente pela classe."""
         pass
 
     @staticmethod
     def generate_url(): 
+        """Cria e retorna a URL PostgreSQL a partir das variáveis carregadas por `Config`.
+
+        Converte `DB_PORT` para inteiro. Não abre conexão; porta ausente ou inválida
+        causa erro durante a conversão.
+        """
         creds = Config.load_envar()
         url = URL.create(
             drivername="postgresql", 
@@ -22,6 +29,13 @@ class Engine_factory:
         return url 
 
     def create_db_engine():
+        """Retorna uma engine SQLAlchemy configurada com pool e log SQL.
+
+        Define pool de cinco conexões, até dez conexões excedentes, verificação
+        de conexão antes do uso (`pool_pre_ping`) e emissão de SQL no console
+        (`echo=True`). A engine normalmente só conecta ao banco quando utilizada.
+        Este método não recebe `self`; chame-o pela classe.
+        """
         url = Engine_factory.generate_url()
         engine = create_engine(
             url,

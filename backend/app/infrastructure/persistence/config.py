@@ -5,11 +5,17 @@ from dotenv import load_dotenv
 
 # Classe connection é responsável por todas as funções relacionadas a conexão com banco de dados
 # Desde o carregamento das variavéis de ambiente do banco até a criação do esquema ORM com SQLALCHEMY 
-class Config: 
+class Config:
+    """Carrega as credenciais PostgreSQL e oferece conexão direta via psycopg2."""
     
     # Carrega as variavéis de ambiente relacionadas ao banco de dados do arquivo .env
     @staticmethod
     def load_envar():
+        """Carrega o `.env` vizinho e retorna as cinco variáveis de acesso ao banco.
+
+        Chaves ausentes são retornadas com valor `None`; este método não valida
+        as credenciais nem abre uma conexão.
+        """
         load_dotenv(dotenv_path=Path(__file__).with_name(".env"))
         return {
             "DB_HOST": os.getenv("DB_HOST"),
@@ -22,6 +28,12 @@ class Config:
     # Faz a conexão com o banco de dados
     @staticmethod
     def make_connection():
+        """Abre uma conexão psycopg2 e a devolve ao chamador.
+
+        Em caso de sucesso, imprime uma mensagem e retorna a conexão aberta,
+        que o chamador deve fechar. Se `psycopg2.connect()` falhar, imprime
+        uma mensagem genérica e retorna `None`.
+        """
         db_env = Config.load_envar()
         try:
             connection = psycopg2.connect(
