@@ -15,17 +15,15 @@ Com base no que estruturamos até agora, aqui está a consolidação para a V1.
 | **RF03** | Editar máquina |
 
 #### RF01 — Cadastrar máquina
-O sistema deve permitir cadastrar máquinas contendo, inicialmente:
-- Identificação
-- Nome
-- Descrição
-- Status
+O sistema deve permitir cadastrar máquinas com nome obrigatório. O banco gera
+automaticamente um ID numérico único para cada máquina.
 
 #### RF02 — Consultar máquinas
 O sistema deve permitir visualizar as máquinas cadastradas.
 
 #### RF03 — Editar máquina
-O sistema deve permitir alterar os dados de uma máquina cadastrada.
+O sistema deve permitir alterar o nome de uma máquina cadastrada. O ID é gerado
+automaticamente e não pode ser alterado pelo usuário.
 
 ---
 
@@ -237,56 +235,53 @@ O sistema deve funcionar inicialmente através de navegador web moderno.
 
 | ID | Descrição |
 |---|---|
-| **RN01** | Máquina com ID única |
+| **RN01** | ID da máquina gerado automaticamente e único |
 | **RN02** | Máquina com nome obrigatório |
-| **RN03** | Máquina com status válido |
-| **RN04** | Componente associado a máquina existente |
-| **RN05** | Componente não pode estar em máquina inexistente |
-| **RN06** | Técnico com ID única |
-| **RN07** | Técnico com nome obrigatório |
-| **RN08** | Manutenção associada a máquina existente |
-| **RN09** | Componente da manutenção pertence à máquina selecionada |
-| **RN10** | Técnico da manutenção deve existir no cadastro |
-| **RN11** | Tipo de manutenção deve ser categoria permitida |
-| **RN12** | Data da manutenção deve ser válida |
+| **RN03** | Componente associado a máquina existente |
+| **RN04** | Componente não pode estar em máquina inexistente |
+| **RN05** | Técnico com ID única |
+| **RN06** | Técnico com nome obrigatório |
+| **RN07** | Manutenção associada a máquina existente |
+| **RN08** | Componente da manutenção pertence à máquina selecionada |
+| **RN09** | Técnico da manutenção deve existir no cadastro |
+| **RN10** | Tipo de manutenção deve ser categoria permitida |
+| **RN11** | Data da manutenção deve ser válida |
 
-### RN01 — Toda máquina deve possuir identificação única
-Cada máquina deve ter um identificador único que não pode ser duplicado.
+### RN01 — O ID da máquina deve ser gerado automaticamente e ser único
+O banco gera um ID numérico para cada máquina. Esse ID não pode ser duplicado
+nem informado ou alterado pelo usuário.
 
 ### RN02 — Toda máquina deve possuir nome
 O nome é um campo obrigatório para toda máquina cadastrada.
 
-### RN03 — Toda máquina deve possuir um status válido
-O status deve estar dentro das opções permitidas pelo sistema.
-
-### RN04 — Todo componente deve estar associado a uma máquina existente
+### RN03 — Todo componente deve estar associado a uma máquina existente
 Um componente só pode ser cadastrado se a máquina a qual se destina existe.
 
-### RN05 — Um componente não pode estar associado a uma máquina inexistente
+### RN04 — Um componente não pode estar associado a uma máquina inexistente
 Validação de integridade referencial.
 
-### RN06 — Todo técnico deve possuir identificação única
+### RN05 — Todo técnico deve possuir identificação única
 Cada técnico deve ter um identificador único.
 
-### RN07 — Todo técnico deve possuir nome
+### RN06 — Todo técnico deve possuir nome
 O nome é um campo obrigatório para todo técnico cadastrado.
 
-### RN08 — Toda manutenção deve estar associada a uma máquina existente
+### RN07 — Toda manutenção deve estar associada a uma máquina existente
 Uma manutenção só pode ser registrada se referencia uma máquina que existe no sistema.
 
-### RN09 — O componente informado em uma manutenção deve pertencer à máquina selecionada
+### RN08 — O componente informado em uma manutenção deve pertencer à máquina selecionada
 ⚠️ **Essa será uma validação muito importante.**
 
 Garante que não haja inconsistências ao registrar manutenção de um componente que não pertence à máquina informada.
 
-### RN10 — O técnico informado em uma manutenção deve existir no cadastro
+### RN09 — O técnico informado em uma manutenção deve existir no cadastro
 Validação de integridade referencial para técnicos.
 
-### RN11 — O tipo de manutenção deve pertencer às categorias permitidas
+### RN10 — O tipo de manutenção deve pertencer às categorias permitidas
 As categorias permitidas são:
 - Corretiva
 - Preventiva
 - Preditiva
 
-### RN12 — A data da manutenção deve ser válida
+### RN11 — A data da manutenção deve ser válida
 A data informada deve ser uma data válida e respeitar as restrições do negócio.
