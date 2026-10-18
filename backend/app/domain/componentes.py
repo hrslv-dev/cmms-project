@@ -17,7 +17,7 @@ class Components(Base):
                       PrimaryKeyConstraint("id", name="pk_componentes")
                       )
 
-    id: Mapped[int] = mapped_column(Integer,Identity, nullable=False)
+    id: Mapped[int] = mapped_column(Integer,Identity(always=True), nullable=False)
     maquina_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("maquinas.id", name="fk_componentes"), nullable=False
     )

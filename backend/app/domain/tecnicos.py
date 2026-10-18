@@ -32,7 +32,7 @@ class Tecnico(Base):
     Regras aplicadas pelo banco:
         ``pk_tecnicos`` identifica o ``id`` como chave primária. Isso faz com
         que cada cadastro tenha um número próprio, sem repetição.
-        ``chk_tencicos_funcao`` confere a função antes de aceitar a gravação.
+        ``chk_tecnicos_funcao`` confere a função antes de aceitar a gravação.
         Assim, a regra continua valendo mesmo se os dados forem enviados por
         outra parte do sistema que não seja esta classe.
 
@@ -49,6 +49,6 @@ class Tecnico(Base):
         PrimaryKeyConstraint("id", name="pk_tecnicos"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, Identity, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, Identity(always=True), nullable=False)
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     funcao: Mapped[str] = mapped_column(String(200), nullable=False)
