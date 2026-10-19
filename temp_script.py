@@ -35,7 +35,7 @@ try:
     modeled_tables = set(Base.metadata.tables)
     db_tables = set(inspect(engine).get_table_names(schema="public")) 
     
-    missing =  - modeled_tables - db_tables
+    missing =  modeled_tables - db_tables
     if missing: 
         print(f"Tabelas ausentes no PostgresSQL: {sorted(missing)}") 
     else: 

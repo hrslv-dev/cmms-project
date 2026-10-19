@@ -15,7 +15,7 @@ class Maquina(Base):
     __tablename__ = "maquinas"
     
     __table_args__ = ( 
-                      PrimaryKeyConstraint("id", name ="pk_maquinas")
+                      PrimaryKeyConstraint("id", name ="pk_maquinas"),
                       )
 
     # Mapeia os valores com as respectivas constraints do banco  
