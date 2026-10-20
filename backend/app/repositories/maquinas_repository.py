@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.app.domain.maquina import Maquina
+from backend.app.models.maquina import Maquina
 from backend.app.repositories.base_repository import BaseRepository
 
 

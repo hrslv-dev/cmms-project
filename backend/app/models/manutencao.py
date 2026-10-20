@@ -4,6 +4,7 @@ from datetime import date, time, timedelta
 
 from sqlalchemy import (
     CheckConstraint,
+    Computed,
     Date,
     ForeignKey,
     Identity,
@@ -83,5 +84,7 @@ class HistoricoManutencao(Base):
     hora_inicio: Mapped[time] = mapped_column(Time, nullable=False)
     hora_fim: Mapped[time | None] = mapped_column(Time, nullable=True)
     tempo_manutencao: Mapped[timedelta | None] = mapped_column(
-        Interval, nullable=True
+        Interval,
+        Computed("hora_fim - hora_inicio", persisted=True),
+        nullable=True,
     )

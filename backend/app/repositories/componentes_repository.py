@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.app.domain.componentes import Components
+from backend.app.models.componentes import Components
 from backend.app.repositories.base_repository import BaseRepository
 
 

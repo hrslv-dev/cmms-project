@@ -45,6 +45,6 @@ class Engine_factory:
             # Confere se a conexão que está no pool ainda está viva. 
             pool_pre_ping=True, 
             # Boolean que confirma se deve se mostrar as querys SQL no console 
-            echo=True) 
+            echo=False) 
         
         return engine 

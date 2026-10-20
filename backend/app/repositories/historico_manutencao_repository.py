@@ -5,7 +5,7 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.app.domain.manutencao import HistoricoManutencao
+from backend.app.models.manutencao import HistoricoManutencao
 from backend.app.repositories.base_repository import BaseRepository
 
 

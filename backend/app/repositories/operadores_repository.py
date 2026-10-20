@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from backend.app.domain.operadores import Operador
+from backend.app.models.operadores import Operador
 from backend.app.repositories.base_repository import BaseRepository
 
 
