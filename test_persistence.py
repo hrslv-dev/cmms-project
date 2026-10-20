@@ -16,7 +16,7 @@ with engine.connect() as connection:
     
     
     command1 = text("SELECT id, nome FROM maquinas;")  
-    command2 = text("INSERT INTO maquinas (nome) VALUES('Multiforca');")
+    command2 = text("INSERT INTO maquinas (nome) VALUES(Multiforca');")
   
     insert =  connection.execute(command2)
     connection.commit()
