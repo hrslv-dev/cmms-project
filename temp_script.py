@@ -2,12 +2,12 @@ from sqlalchemy import inspect, select, text
 from sqlalchemy.orm import Session 
 from sqlalchemy import engine
 
-from backend.app.domain.base import Base 
-from backend.app.domain.maquina import Maquina
-from backend.app.domain.componentes import Components
-from backend.app.domain.manutencao import HistoricoManutencao
-from backend.app.domain.operadores import Operador
-from backend.app.domain.tecnicos import Tecnico
+from backend.app.models.base import Base 
+from backend.app.models.maquina import Maquina
+from backend.app.models.componentes import Components
+from backend.app.models.manutencao import HistoricoManutencao
+from backend.app.models.operadores import Operador
+from backend.app.models.tecnicos import Tecnico
 from backend.app.infrastructure.persistence.engine import Engine_factory
 
 """Teste de integração SOMENTE LEITURA 

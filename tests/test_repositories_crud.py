@@ -15,11 +15,11 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
-from backend.app.domain.componentes import Components
-from backend.app.domain.manutencao import HistoricoManutencao
-from backend.app.domain.maquina import Maquina
-from backend.app.domain.operadores import Operador
-from backend.app.domain.tecnicos import Tecnico
+from backend.app.models.componentes import Components
+from backend.app.models.manutencao import HistoricoManutencao
+from backend.app.models.maquina import Maquina
+from backend.app.models.operadores import Operador
+from backend.app.models.tecnicos import Tecnico
 from backend.app.infrastructure.persistence.engine import Engine_factory
 from backend.app.repositories import (
     ComponentsRepository,

@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from backend.app.domain.maquina import Maquina
+from backend.app.models.maquina import Maquina
 from backend.app.infrastructure.persistence.engine import Engine_factory
 
 engine = Engine_factory.create_db_engine()

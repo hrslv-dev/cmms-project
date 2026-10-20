@@ -7,7 +7,7 @@ cmms-project/
 ├── backend/
 │   └── app/
 │       ├── api/
-│       ├── domain/
+│       ├── models/
 │       ├── schemas/
 │       ├── services/
 │       ├── repositories/
@@ -28,7 +28,7 @@ cmms-project/
 - **`backend/`**: código do servidor e da aplicação backend.
 - **`backend/app/`**: pacote principal da aplicação Python.
 - **`backend/app/api/`**: rotas HTTP e controladores que recebem requisições e encaminham operações aos serviços.
-- **`backend/app/domain/`**: entidades e conceitos centrais do CMMS, como máquinas, componentes, técnicos e manutenções.
+- **`backend/app/models/`**: modelos que representam as entidades do CMMS e seu mapeamento de persistência, como máquinas, componentes, técnicos e manutenções.
 - **`backend/app/schemas/`**: formatos de entrada e saída da API, incluindo validação e serialização de dados.
 - **`backend/app/services/`**: casos de uso e regras de aplicação que coordenam domínio e persistência.
 - **`backend/app/repositories/`**: abstrações e implementações de consulta e gravação de entidades.
@@ -48,4 +48,4 @@ cmms-project/
 
 ## Organização do backend
 
-O fluxo esperado é: `api` recebe a requisição, `schemas` valida os dados, `services` executa o caso de uso, `domain` representa conceitos e regras do negócio, e `repositories` acessa os dados por meio da infraestrutura em `infrastructure/persistence`.
+O fluxo esperado é: `api` recebe a requisição, `schemas` valida os dados, `services` executa o caso de uso, `models` representa as entidades do domínio e seu mapeamento de persistência, e `repositories` acessa os dados por meio da infraestrutura em `infrastructure/persistence`.
