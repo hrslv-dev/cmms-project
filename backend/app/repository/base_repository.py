@@ -16,4 +16,6 @@ class GenericRepository(Generic[ModelType]):
         self.model = model
         
     def list_all(self) -> list[ModelType]: 
+        stmt = select(self.model)
+        return list(self.session.scalars(stmt).all())
         
