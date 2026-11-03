@@ -5,7 +5,7 @@ abre uma terceira conexão que permanece aberta (`con3`) e imprime o estado do
 pool. Requer PostgreSQL configurado e disponível; não importe em produção.
 """
 
-from backend.app.infrastructure.persistence.engine import Engine_factory
+from backend.app.infrastructure.conf.engine import Engine_factory
 
 engine = Engine_factory.create_db_engine()
 

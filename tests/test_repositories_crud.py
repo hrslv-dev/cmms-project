@@ -18,9 +18,9 @@ from sqlalchemy.orm import Session
 from backend.app.models.componentes import Components
 from backend.app.models.manutencao import HistoricoManutencao
 from backend.app.models.maquina import Maquina
-from backend.app.models.operadores import Operador
+from backend.app.models.operadores_model import Operador
 from backend.app.models.tecnicos import Tecnico
-from backend.app.infrastructure.persistence.engine import Engine_factory
+from backend.app.infrastructure.conf.engine import Engine_factory
 from backend.app.repositories import (
     ComponentsRepository,
     HistoricoManutencaoRepository,
@@ -55,7 +55,7 @@ class RepositoryCrudIntegrationTests(unittest.TestCase):
     def _reload(self, repository, entity_id: int):
         """Limpa o cache da sessão para confirmar a leitura no banco."""
         self.session.expire_all()
-        return repository.get_by_id(entity_id)
+        return repository.search_by_id(entity_id)
 
     @staticmethod
     def _unique_name(label: str) -> str:
@@ -77,9 +77,9 @@ class RepositoryCrudIntegrationTests(unittest.TestCase):
             [item.id for item in repository.list_by_name(machine_name)],
             [machine.id],
         )
-        self.assertEqual(repository.search_id(machine.id).id, machine.id)
+        self.assertEqual(repository.search_by_id(machine.id).id, machine.id)
         self.assertEqual(repository.search_name(machine_name).id, machine.id)
-        self.assertIn(machine.id, [item.id for item in repository.see_all()])
+        self.assertIn(machine.id, [item.id for item in repository.list_all()])
 
         updated = repository.update_by_id(machine.id, nome="Máquina atualizada")
         self.assertIsNotNone(updated)

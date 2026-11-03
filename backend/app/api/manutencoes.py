@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from backend.app.infrastructure.persistence.session import get_db_session
+from backend.app.infrastructure.conf.session import get_db_session
 from backend.app.schemas.manutencao import ManutencaoCreate, ManutencaoRead
 from backend.app.services.manutencao_service import ManutencaoService
 

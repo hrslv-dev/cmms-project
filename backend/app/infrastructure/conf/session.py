@@ -5,7 +5,7 @@ from functools import lru_cache
 
 from sqlalchemy.orm import Session, sessionmaker
 
-from backend.app.infrastructure.persistence.engine import Engine_factory
+from backend.app.infrastructure.conf.engine import Engine_factory
 
 
 @lru_cache(maxsize=1)
