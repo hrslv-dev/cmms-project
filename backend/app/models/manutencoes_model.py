@@ -11,7 +11,7 @@ from sqlalchemy import (
     Time,
     Computed,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.base.base_model import Base
 
@@ -59,4 +59,17 @@ class ManutencoesModel(Base):
         Interval,
         Computed("hora_fim - hora_inicio", persisted=True),
         nullable=True,
+    )
+
+    maquina: Mapped["MaquinasModel"] = relationship(
+        back_populates="manutencoes"
+    )
+    componente: Mapped["ComponentesModel"] = relationship(
+        back_populates="manutencoes"
+    )
+    tecnico: Mapped["TecnicoModel"] = relationship(
+        back_populates="manutencoes"
+    )
+    operador: Mapped["OperadorModel"] = relationship(
+        back_populates="manutencoes"
     )
