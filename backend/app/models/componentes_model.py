@@ -1,5 +1,6 @@
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import relationship
 
 from app.infrastructure.base.base_model import Base
 
@@ -17,4 +18,7 @@ class ComponentesModel(Base):
 
     maquina_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("maquinas.id"), nullable=False
+    )
+    maquina: Mapped[list["MaquinasModel"]] = relationship(
+        back_populates="componentes"
     )

@@ -2,10 +2,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session  
 
 from app.models.tecnico_model import TecnicoModel
+from app.infrastructure.base.base_repository import GenericRepository
 
-class TecnicoRepository(): 
+class TecnicoRepository(GenericRepository): 
     
     def __init__(self, session:Session):
-        self.session = session
-    
+        super().__init__(session,TecnicoModel)
     
