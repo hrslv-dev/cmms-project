@@ -1,44 +1,62 @@
-from sqlalchemy import ForeignKey, Integer, Text, Computed, Interval, Time, String
+from datetime import date, time, timedelta
+
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    ForeignKey,
+    Integer,
+    Interval,
+    String,
+    Text,
+    Time,
+    Computed,
+)
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import CheckConstraint
 
 from app.infrastructure.base.base_model import Base
-
-from datetime import timedelta
-from datetime import time 
 
 
 class ManutencoesModel(Base):
     __tablename__ = "manutencoes"
-    __table_args__ = (CheckConstraint(
-        "funcao IN ('Preventiva', 'Corretiva')", 
-        name = 'chk_manutencao_tipo' 
-        ), 
-        CheckConstraint("funcao IN ('Inspeção','Limpeza','Ajuste','Lubrificação', 'Substituição','Reparo','Instalação','Configuração','Calibração','Modificação')", 
-            name='chk_servicos'),
+    __table_args__ = (
+        CheckConstraint(
+            "tipo IN ('Preventiva', 'Corretiva')",
+            name="chk_manutencao_tipo",
+        ),
+        CheckConstraint(
+            "servico IN ('Inspeção', 'Limpeza', 'Ajuste', 'Lubrificação', "
+            "'Substituição', 'Reparo', 'Instalação', 'Configuração', "
+            "'Calibração', 'Modificação')",
+            name="chk_manutencao_servico",
+        ),
+        CheckConstraint(
+            "hora_fim IS NULL OR hora_inicio < hora_fim",
+            name="chk_manutencao_horario",
+        ),
     )
-        
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     maquina_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("maquinas.id"), nullable=False
     )
-    operador_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("operadores.id"), nullable=True
+    componente_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("componentes.id"), nullable=False
     )
     tecnico_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("tecnicos.id"), nullable=True
+        Integer, ForeignKey("tecnicos.id"), nullable=False
     )
-    maquina_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("maquinas.id"), nullable=False
+    operador_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("operadores.id"), nullable=False
     )
-    descricao: Mapped[str] = mapped_column(Text, nullable=True)
-    tempo_passado: Mapped[timedelta | None] = mapped_column(
-        Interval, Computed("hora_fim - hora_inicio", persisted=True)
-    )
+    tipo: Mapped[str] = mapped_column(String(50), nullable=False)
+    problema: Mapped[str | None] = mapped_column(Text, nullable=True)
+    servico: Mapped[str] = mapped_column(String(100), nullable=False)
+    descricao: Mapped[str | None] = mapped_column(Text, nullable=True)
+    data_manutencao: Mapped[date] = mapped_column(Date, nullable=False)
     hora_inicio: Mapped[time] = mapped_column(Time, nullable=False)
-    hora_fim: Mapped[time] = mapped_column(Time, nullable=False)
-    servico: Mapped[str] = mapped_column(String(100), nullable=True)
-    problema: Mapped[str] = mapped_column(Text, nullable=False) 
-    tipo : Mapped[str] = mapped_column(String(50), nullable=True)  
-    
+    hora_fim: Mapped[time | None] = mapped_column(Time, nullable=True)
+    tempo_manutencao: Mapped[timedelta | None] = mapped_column(
+        Interval,
+        Computed("hora_fim - hora_inicio", persisted=True),
+        nullable=True,
+    )

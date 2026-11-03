@@ -9,13 +9,12 @@ class ComponentesModel(Base):
 
     id: Mapped[int] = mapped_column(
         Integer, primary_key=True
-        )
-    
+    )
+
     nome: Mapped[str] = mapped_column(
         String(100), nullable=False
-        )
-    
+    )
+
     maquina_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("maquinas.id"), nullable=False
-        )
-    
+    )
