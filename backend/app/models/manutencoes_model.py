@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class ManutencoesModel(Base):
-    __tablename__ = "manutencoes"
+    __tablename__ = "historico_manutencao"
     __table_args__ = (
         sq.CheckConstraint(
             "tipo IN ('Preventiva', 'Corretiva')",
@@ -55,6 +55,7 @@ class ManutencoesModel(Base):
     hora_inicio: orm.Mapped[time] = orm.mapped_column(sq.Time, nullable=False)
     hora_fim: orm.Mapped[time | None] = orm.mapped_column(sq.Time, nullable=True)
     tempo_manutencao: orm.Mapped[timedelta | None] = orm.mapped_column(
+        "tempo_passado",
         sq.Interval,
         sq.Computed("hora_fim - hora_inicio", persisted=True),
         nullable=True,
