@@ -1,6 +1,6 @@
 """Caso de uso para registrar uma manutenção."""
 
-from sqlalchemy.orm import Session
+import sqlalchemy.orm as orm
 
 from backend.app.models.manutencao import HistoricoManutencao
 from backend.app.repositories.historico_manutencao_repository import (
@@ -16,7 +16,7 @@ class ManutencaoService:
     num model, pede ao repository para adicioná-lo e confirma a transação.
     """
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: orm.Session) -> None:
         """Recebe a sessão da requisição e compartilha-a com o repository."""
         self.session = session
         self.repository = HistoricoManutencaoRepository(session)

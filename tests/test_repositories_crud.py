@@ -13,7 +13,7 @@ import unittest
 from datetime import date, time, timedelta
 from uuid import uuid4
 
-from sqlalchemy.orm import Session
+import sqlalchemy.orm as orm
 
 from backend.app.models.componentes import Components
 from backend.app.models.manutencao import HistoricoManutencao
@@ -44,7 +44,7 @@ class RepositoryCrudIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.connection = self.engine.connect()
         self.transaction = self.connection.begin()
-        self.session = Session(bind=self.connection)
+        self.session = orm.Session(bind=self.connection)
 
     def tearDown(self) -> None:
         self.session.close()

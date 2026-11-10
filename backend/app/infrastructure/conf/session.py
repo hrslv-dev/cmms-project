@@ -1,14 +1,15 @@
 """Criação de sessões SQLAlchemy para uso nos repositories e models."""
 
-from sqlalchemy.orm import Session, sessionmaker
+import sqlalchemy.orm as orm
 
-from .conf.engine import Engine_factory
+from .engine import Engine_factory
 
 
 engine = Engine_factory.create_db_engine()
-SessionLocal = sessionmaker(bind=engine)
+SessionLocal = orm.sessionmaker(bind=engine)
 
 
-def create_session() -> Session:
+def create_session() -> orm.Session:
     """Cria uma sessão; quem a utiliza controla commit, rollback e fechamento."""
     return SessionLocal()
+ 

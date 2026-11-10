@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+import sqlalchemy.orm as orm
 
 from backend.app.infrastructure.conf.session import get_db_session
 from backend.app.schemas.manutencao import ManutencaoCreate, ManutencaoRead
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/manutencoes", tags=["Manutenções"])
 )
 def registrar_manutencao(
     dados: ManutencaoCreate,
-    session: Annotated[Session, Depends(get_db_session)],
+    session: Annotated[orm.Session, Depends(get_db_session)],
 ) -> ManutencaoRead:
     """Valida o pedido e encaminha o caso de uso ao service."""
     service = ManutencaoService(session)

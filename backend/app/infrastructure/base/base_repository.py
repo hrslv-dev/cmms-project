@@ -1,7 +1,7 @@
 from typing import Any, Generic, TypeVar
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+import sqlalchemy as sq
+import sqlalchemy.orm as orm
 
 from app.infrastructure.base.base_model import Base
 
@@ -16,7 +16,7 @@ class GenericRepository(Generic[ModelType]):
     transação. Essa decisão pertence ao service ou à camada que o chamou.
     """
 
-    def __init__(self, session: Session, model: type[ModelType]) -> None:
+    def __init__(self, session: orm.Session, model: type[ModelType]) -> None:
         self.session = session
         self.model = model
 
@@ -24,7 +24,7 @@ class GenericRepository(Generic[ModelType]):
         self, limit: int | None = None, offset: int = 0
     ) -> list[ModelType]:
         """Retorna os registros da entidade, com paginação opcional."""
-        stmt = select(self.model).offset(offset)
+        stmt = sq.select(self.model).offset(offset)
         if limit is not None:
             stmt = stmt.limit(limit)
         return list(self.session.scalars(stmt).all())

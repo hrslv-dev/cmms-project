@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
-from sqlalchemy.engine import URL
+import sqlalchemy as sq
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -54,13 +54,13 @@ class ExcelDialectConfig:
             file_locking=_env_bool("CMMS_EXCEL_FILE_LOCKING", True),
         )
 
-    def build_url(self, workbook_path: str) -> URL:
+    def build_url(self, workbook_path: str) -> sq.engine.URL:
         """Monta a URL SQLAlchemy `excel` para o arquivo informado.
 
         Inclui o caminho, o nome do backend DB-API e `autocommit=false`, para
         que alterações sejam confirmadas explicitamente. Não abre o arquivo.
         """
-        return URL.create(
+        return sq.engine.URL.create(
             drivername="excel",
             database=workbook_path,
             query={

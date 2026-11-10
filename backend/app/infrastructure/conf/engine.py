@@ -1,7 +1,5 @@
 from .config import Config
-from sqlalchemy import create_engine
-from sqlalchemy import QueuePool
-from sqlalchemy.engine import URL 
+import sqlalchemy as sq
 
 class Engine_factory:
     """Monta URL e engine SQLAlchemy para a conexão PostgreSQL do CMMS."""
@@ -18,7 +16,7 @@ class Engine_factory:
         causa erro durante a conversão.
         """
         creds = Config.load_envar()
-        url = URL.create(
+        url = sq.engine.URL.create(
             drivername="postgresql", 
             username=creds["DB_USER"], 
             password=creds["DB_PASSWORD"], 
@@ -37,7 +35,7 @@ class Engine_factory:
         Este método não recebe `self`; chame-o pela classe.
         """
         url = Engine_factory.generate_url()
-        engine = create_engine(
+        engine = sq.create_engine(
             url,
             pool_size=5, 
             # Quantidade máxima de conexões temporárias caso as 5 pools estiverem ocupadas
