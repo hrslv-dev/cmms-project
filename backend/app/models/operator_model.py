@@ -8,14 +8,14 @@ import sqlalchemy.orm as orm
 from app.infrastructure.base.base_model import Base
 
 if TYPE_CHECKING:
-    from app.models.manutencoes_model import ManutencoesModel
+    from app.models.maintenance_model import MaintenanceModel
 
 
-class OperadorModel(Base):
+class OperatorModel(Base):
     __tablename__ = "operadores"
 
     id: orm.Mapped[int] = orm.mapped_column(sq.Integer, primary_key=True)
-    nome: orm.Mapped[str] = orm.mapped_column(sq.String(100), nullable=False)
-    manutencoes: orm.Mapped[list[ManutencoesModel]] = orm.relationship(
-        back_populates="operador"
+    name: orm.Mapped[str] = orm.mapped_column("nome", sq.String(100), nullable=False)
+    maintenances: orm.Mapped[list[MaintenanceModel]] = orm.relationship(
+        back_populates="operator"
     )

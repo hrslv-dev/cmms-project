@@ -6,8 +6,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-TipoManutencao = Literal["Corretiva", "Preventiva"]
-ServicoManutencao = Literal[
+MaintenanceType = Literal["Corretiva", "Preventiva"]
+MaintenanceServiceType = Literal[
     "Inspeção",
     "Limpeza",
     "Ajuste",
@@ -21,39 +21,39 @@ ServicoManutencao = Literal[
 ]
 
 
-class ManutencaoCreate(BaseModel):
+class MaintenanceCreate(BaseModel):
     """Dados que o cliente precisa enviar para registrar uma manutenção.
 
-    O ID é gerado pelo banco, e ``tempo_manutencao`` é calculado pela coluna
+    O ID é gerado pelo banco, e ``duration`` é calculado pela coluna
     persistida; por isso, nenhum dos dois faz parte dos dados de entrada.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    maquina_id: int = Field(gt=0)
-    tecnico_id: int = Field(gt=0)
-    componente_id: int = Field(gt=0)
-    operador_id: int = Field(gt=0)
-    tipo: TipoManutencao
-    problema: str | None = None
-    servico: ServicoManutencao
-    descricao: str | None = None
-    data_manutencao: date
-    hora_inicio: time
-    hora_fim: time | None = None
+    machine_id: int = Field(gt=0)
+    technician_id: int = Field(gt=0)
+    subset_id: int = Field(gt=0)
+    operator_id: int = Field(gt=0)
+    maintenance_type: MaintenanceType
+    problem: str | None = None
+    service: MaintenanceServiceType
+    description: str | None = None
+    maintenance_date: date
+    start_time: time
+    end_time: time | None = None
 
     @model_validator(mode="after")
-    def validar_horario(self) -> "ManutencaoCreate":
+    def validate_schedule(self) -> "MaintenanceCreate":
         """Mantém no contrato da API a regra de horário do banco."""
-        if self.hora_fim is not None and self.hora_inicio >= self.hora_fim:
-            raise ValueError("hora_fim deve ser posterior a hora_inicio")
+        if self.end_time is not None and self.start_time >= self.end_time:
+            raise ValueError("end_time deve ser posterior a start_time")
         return self
 
 
-class ManutencaoRead(ManutencaoCreate):
+class MaintenanceRead(MaintenanceCreate):
     """Formato de resposta da API, incluindo os valores gerados pelo banco."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    tempo_manutencao: timedelta | None
+    duration: timedelta | None

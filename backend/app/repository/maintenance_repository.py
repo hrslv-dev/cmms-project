@@ -2,37 +2,37 @@ import sqlalchemy as sq
 import sqlalchemy.orm as orm
 
 from app.infrastructure.base.base_repository import GenericRepository
-from app.models.manutencoes_model import ManutencoesModel
+from app.models.maintenance_model import MaintenanceModel
 
 
-class ManutencoesRepository(GenericRepository[ManutencoesModel]):
+class MaintenanceRepository(GenericRepository[MaintenanceModel]):
     def __init__(self, session: orm.Session) -> None:
-        super().__init__(session, ManutencoesModel)
+        super().__init__(session, MaintenanceModel)
 
-    def list_by_maquinas(self, maquina_id: int) -> list[ManutencoesModel]:
+    def list_by_machine(self, machine_id: int) -> list[MaintenanceModel]:
         """Lista as manutenções registradas para a máquina informada."""
-        stmt = sq.select(ManutencoesModel).where(
-            ManutencoesModel.maquina_id == maquina_id
+        stmt = sq.select(MaintenanceModel).where(
+            MaintenanceModel.machine_id == machine_id
         )
         return list(self.session.scalars(stmt).all())
 
-    def list_by_componentes(self, componente_id: int) -> list[ManutencoesModel]:
-        """Lista as manutenções registradas para o componente informado."""
-        stmt = sq.select(ManutencoesModel).where(
-            ManutencoesModel.componente_id == componente_id
+    def list_by_subset(self, subset_id: int) -> list[MaintenanceModel]:
+        """Lista as manutenções registradas para o subconjunto informado."""
+        stmt = sq.select(MaintenanceModel).where(
+            MaintenanceModel.subset_id == subset_id
         )
         return list(self.session.scalars(stmt).all())
 
-    def list_by_tecnicos(self, tecnico_id: int) -> list[ManutencoesModel]:
+    def list_by_technician(self, technician_id: int) -> list[MaintenanceModel]:
         """Lista as manutenções realizadas pelo técnico informado."""
-        stmt = sq.select(ManutencoesModel).where(
-            ManutencoesModel.tecnico_id == tecnico_id
+        stmt = sq.select(MaintenanceModel).where(
+            MaintenanceModel.technician_id == technician_id
         )
         return list(self.session.scalars(stmt).all())
 
-    def list_by_operadores(self, operador_id: int) -> list[ManutencoesModel]:
+    def list_by_operator(self, operator_id: int) -> list[MaintenanceModel]:
         """Lista as manutenções associadas ao operador informado."""
-        stmt = sq.select(ManutencoesModel).where(
-            ManutencoesModel.operador_id == operador_id
+        stmt = sq.select(MaintenanceModel).where(
+            MaintenanceModel.operator_id == operator_id
         )
         return list(self.session.scalars(stmt).all())

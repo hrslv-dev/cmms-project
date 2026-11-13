@@ -8,18 +8,18 @@ import sqlalchemy.orm as orm
 from app.infrastructure.base.base_model import Base
 
 if TYPE_CHECKING:
-    from app.models.componentes_model import ComponentesModel
-    from app.models.manutencoes_model import ManutencoesModel
+    from app.models.subset_model import SubsetModel
+    from app.models.maintenance_model import MaintenanceModel
 
 
-class MaquinasModel(Base):
+class MachineModel(Base):
     __tablename__ = "maquinas"
 
     id: orm.Mapped[int] = orm.mapped_column(sq.Integer, primary_key=True)
-    nome: orm.Mapped[str] = orm.mapped_column(sq.String(100), nullable=False)
-    componentes: orm.Mapped[list[ComponentesModel]] = orm.relationship(
-        back_populates="maquina"
+    name: orm.Mapped[str] = orm.mapped_column("nome", sq.String(100), nullable=False)
+    subsets: orm.Mapped[list[SubsetModel]] = orm.relationship(
+        back_populates="machine"
     )
-    manutencoes: orm.Mapped[list[ManutencoesModel]] = orm.relationship(
-        back_populates="maquina"
+    maintenances: orm.Mapped[list[MaintenanceModel]] = orm.relationship(
+        back_populates="machine"
     )

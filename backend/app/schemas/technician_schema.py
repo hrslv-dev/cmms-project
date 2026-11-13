@@ -1,12 +1,12 @@
 from pydantic import BaseModel, Field 
 
-class TecnicoCreate(BaseModel): 
-    nome: str = Field(min_length=5, max_length=200)
-    funcao: str = Field()
+class TechnicianCreate(BaseModel): 
+    name: str = Field(min_length=5, max_length=200)
+    function: str = Field()
     
-class TecnicoResponse(BaseModel): 
+class TechnicianResponse(BaseModel): 
     id: int 
-    nome: str 
-    funcao: str 
+    name: str 
+    function: str 
     
     model_config = {"from_attributes": True}

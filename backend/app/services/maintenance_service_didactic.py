@@ -2,17 +2,17 @@
 # Definir cardinalidade desses relacionamentos 
 
 
-class ManutencaoService: 
+class MaintenanceService: 
     def __init__(self, 
-          manutencao_repository, 
-          tecnico_repository,
-          operador_repository, 
-          componente_repository,
-          maquina_repository
+          maintenance_repository, 
+          technician_repository,
+          operator_repository, 
+          subset_repository,
+          machine_repository
     ):
-        self.manutencao_repository = manutencao_repository, 
-        self.tecnico_repository = tecnico_repository
-        self.operador_repository = operador_repository, 
-        self.componente_repository = componente_repository, 
-        self.maquina_repository = maquina_repository
+        self.maintenance_repository = maintenance_repository, 
+        self.technician_repository = technician_repository
+        self.operator_repository = operator_repository, 
+        self.subset_repository = subset_repository, 
+        self.machine_repository = machine_repository
         

@@ -8,10 +8,10 @@ import sqlalchemy.orm as orm
 from app.infrastructure.base.base_model import Base
 
 if TYPE_CHECKING:
-    from app.models.manutencoes_model import ManutencoesModel
+    from app.models.maintenance_model import MaintenanceModel
 
 
-class TecnicoModel(Base):
+class TechnicianModel(Base):
     __tablename__ = "tecnicos"
     __table_args__ = (
         sq.CheckConstraint(
@@ -21,8 +21,8 @@ class TecnicoModel(Base):
     )
 
     id: orm.Mapped[int] = orm.mapped_column(sq.Integer, primary_key=True)
-    nome: orm.Mapped[str] = orm.mapped_column(sq.String(50), nullable=False)
-    funcao: orm.Mapped[str] = orm.mapped_column(sq.String(50), nullable=False)
-    manutencoes: orm.Mapped[list[ManutencoesModel]] = orm.relationship(
-        back_populates="tecnico"
+    name: orm.Mapped[str] = orm.mapped_column("nome", sq.String(50), nullable=False)
+    function: orm.Mapped[str] = orm.mapped_column("funcao", sq.String(50), nullable=False)
+    maintenances: orm.Mapped[list[MaintenanceModel]] = orm.relationship(
+        back_populates="technician"
     )
