@@ -9,20 +9,30 @@ from app.infrastructure.base.base_model import Base
 
 if TYPE_CHECKING:
     from app.models.maintenance_model import MaintenanceModel
+    from app.models.technical_function_model import TechnicalFunctionModel
 
 
 class TechnicianModel(Base):
-    __tablename__ = "tecnicos"
-    __table_args__ = (
-        sq.CheckConstraint(
-            "funcao IN ('Eletricista', 'Mecânico')",
-            name="ck_funcao_tecnico",
+    """Tabela ``technicians``: técnico com exatamente uma função cadastrada."""
+
+    __tablename__ = "technicians"
+    __table_args__ = (sq.Index("idx_technicians_function", "function_id"),)
+
+    name: orm.Mapped[str] = orm.mapped_column(sq.String(100), nullable=False)
+    function_id: orm.Mapped[int] = orm.mapped_column(
+        sq.ForeignKey(
+            "technical_functions.id",
+            name="fk_technical_function",
+            ondelete="RESTRICT",
         ),
+        nullable=False,
     )
 
-    id: orm.Mapped[int] = orm.mapped_column(sq.Integer, primary_key=True)
-    name: orm.Mapped[str] = orm.mapped_column("nome", sq.String(50), nullable=False)
-    function: orm.Mapped[str] = orm.mapped_column("funcao", sq.String(50), nullable=False)
+    # ``function`` agora é o objeto da função técnica (antes era uma string).
+    # O nome fica em ``technician.function.name``.
+    function: orm.Mapped[TechnicalFunctionModel] = orm.relationship(
+        back_populates="technicians"
+    )
     maintenances: orm.Mapped[list[MaintenanceModel]] = orm.relationship(
-        back_populates="technician"
+        back_populates="technician", passive_deletes="all"
     )

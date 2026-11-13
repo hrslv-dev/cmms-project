@@ -3,6 +3,7 @@ import sqlalchemy.orm as orm
 
 from app.infrastructure.base.base_repository import GenericRepository
 from app.models.maintenance_model import MaintenanceModel
+from app.models.subset_maintenance_model import SubsetMaintenanceModel
 
 
 class MaintenanceRepository(GenericRepository[MaintenanceModel]):
@@ -17,9 +18,17 @@ class MaintenanceRepository(GenericRepository[MaintenanceModel]):
         return list(self.session.scalars(stmt).all())
 
     def list_by_subset(self, subset_id: int) -> list[MaintenanceModel]:
-        """Lista as manutenções registradas para o subconjunto informado."""
-        stmt = sq.select(MaintenanceModel).where(
-            MaintenanceModel.subset_id == subset_id
+        """Lista as manutenções que incluem o subconjunto informado.
+
+        ``maintenance`` não tem mais coluna de subconjunto: o vínculo está em
+        ``subsets_maintenance``, por isso a consulta faz um JOIN com ela. O
+        par ``(maintenance_id, subset_id)`` é único, logo cada manutenção
+        aparece no máximo uma vez no resultado.
+        """
+        stmt = (
+            sq.select(MaintenanceModel)
+            .join(MaintenanceModel.subset_links)
+            .where(SubsetMaintenanceModel.subset_id == subset_id)
         )
         return list(self.session.scalars(stmt).all())
 
