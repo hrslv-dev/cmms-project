@@ -18,7 +18,9 @@ from app.services.exceptions import (
     InvalidProblemError,
     NotFoundError,
     SubsetMachineMismatchError,
+    TimerStateError,
 )
+from app.services.maintenance_timer import MaintenanceTimer
 
 
 class MaintenanceService:
@@ -43,8 +45,13 @@ class MaintenanceService:
     erro, ``rollback`` desfaz tudo o que o caso de uso já havia enviado.
     """
 
-    def __init__(self, session: orm.Session) -> None:
+    def __init__(
+        self, session: orm.Session, timer: MaintenanceTimer | None = None
+    ) -> None:
         self.session = session
+        # O cronômetro só é criado (a partir do .env) quando um método de
+        # cronômetro é usado; create_maintenance funciona sem a chave.
+        self._timer = timer
         self.maintenance_repository = MaintenanceRepository(session)
         self.machine_repository = MachineRepository(session)
         self.technician_repository = TechnicianRepository(session)
@@ -116,6 +123,64 @@ class MaintenanceService:
             self.session.rollback()
             raise
         return link
+
+    # -------------------------------------------------------------- cronômetro
+
+    @property
+    def timer(self) -> MaintenanceTimer:
+        if self._timer is None:
+            self._timer = MaintenanceTimer.from_env()
+        return self._timer
+
+    def start_timer(self) -> str:
+        """Botão "Iniciar manutenção": devolve o token com a hora de início.
+
+        Não grava nada no banco (ver limitações em ``maintenance_timer``).
+        """
+        return self.timer.start()
+
+    def finish_timer(self, token: str) -> str:
+        """Botão "Encerrar manutenção": devolve o token com início e fim."""
+        return self.timer.finish(token)
+
+    def create_maintenance_from_timer(
+        self,
+        token: str,
+        *,
+        machine_id: int,
+        technician_id: int,
+        service: str,
+        maintenance_type: MaintenanceType | str,
+        operator_id: int | None = None,
+        problem: ProblemCategory | str | None = None,
+        description: str | None = None,
+        subset_ids: Iterable[int] = (),
+    ) -> MaintenanceModel:
+        """Cadastro final: data e horários saem do token, não do cliente.
+
+        ``maintenance_date`` é a data do INÍCIO. Se a manutenção cruzar a
+        meia-noite, o banco soma 24 h ao calcular ``elapsed_time``. Uma duração
+        de 24 h ou mais não cabe em dois campos TIME e seria registrada errada;
+        não há validação para isso, conforme decidido para os horários.
+        """
+        data = self.timer.read(token)
+        if data.end is None:
+            raise TimerStateError(
+                "A manutenção precisa ser encerrada antes do cadastro."
+            )
+        return self.create_maintenance(
+            machine_id=machine_id,
+            technician_id=technician_id,
+            operator_id=operator_id,
+            maintenance_date=data.start.date(),
+            time_start=data.start.time().replace(tzinfo=None),
+            time_end=data.end.time().replace(tzinfo=None),
+            service=service,
+            maintenance_type=maintenance_type,
+            problem=problem,
+            description=description,
+            subset_ids=subset_ids,
+        )
 
     # ------------------------------------------------------------------ regras
 

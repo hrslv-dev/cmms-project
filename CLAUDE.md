@@ -200,7 +200,7 @@ Colunas de dados de `maintenance`, na ordem em que estão no banco:
 | `time_start` | `TIME NOT NULL` | Horário de início. |
 | `time_end` | `TIME NULL` | `NULL` significa manutenção em andamento. |
 | `service` | `VARCHAR(20) NOT NULL` | `ck_maintenance_service`: `'Inspeção'`, `'Lubrificação'`, `'Substituição'`, `'Ajuste'`, `'Limpeza'`, `'Reparo'`, `'Instalação'`, `'Configuração'`, `'Calibração'` ou `'Modificação'`. |
-| `problem` | `TEXT NULL` | `ck_maintenance_problem_corrective`: obrigatório quando `type = 'Corretiva'`; pode ser `NULL` em preventivas. |
+| `problem` | `TEXT NULL` | `ck_maintenance_problem_corrective`: obrigatório quando `type = 'Corretiva'`; pode ser `NULL` em preventivas. Na aplicação, o Service restringe o valor a `'Mecânico'`, `'Elétrico'` ou `'Outro'` (ver regras de aplicação abaixo). |
 | `type` | `VARCHAR(20) NOT NULL` | `ck_maintenance_type`: `'Corretiva'` ou `'Preventiva'`. |
 | `elapsed_time` | `INTERVAL`, `GENERATED ALWAYS AS (...) STORED` | Calculada pelo banco: `NULL` se `time_end` for `NULL`; `time_end - time_start` se `time_end >= time_start`; caso contrário soma 24 horas (manutenção que cruza a meia-noite). Nunca enviar em `INSERT`/`UPDATE`. |
 | `description` | `TEXT NULL` | Opcional. |
@@ -226,6 +226,15 @@ Observações:
 - `maintenance` **não tem** coluna de status nem outros campos além dos listados acima. Não acrescentar colunas sem aprovação.
 - Não existe `CHECK` exigindo `time_start < time_end`: um `time_end` menor é tratado como passagem pela meia-noite. Um horário invertido por engano (início 14:00, fim 13:00) é aceito e resulta em 23 horas.
 - O `CHECK` de `problem` recusa apenas `NULL`; uma corretiva com texto vazio (`''`) é aceita pelo banco.
+
+Regras de aplicação para `maintenance`, decididas pelo usuário em 17 de novembro de 2026 e implementadas em `backend/app/services/maintenance_service.py`:
+
+- **`problem`:** limitado ao `Enum` `ProblemCategory` (`'Mecânico'`, `'Elétrico'`, `'Outro'`, em `backend/app/services/enums.py`). Em corretiva é obrigatório, e vazio ou só espaços é recusado. Em preventiva é opcional; se informado, também precisa ser do `Enum`. **O banco não foi alterado:** a coluna continua `TEXT` livre, e escritas fora do Service não passam por essa regra.
+- **Horário:** sem validação. O horário invertido é aceito e o banco o trata como passagem pela meia-noite.
+- **Cronômetro (Iniciar → Encerrar → Cadastrar):** decidido pelo usuário em 17 de novembro de 2026 e implementado em `backend/app/services/maintenance_timer.py` e `MaintenanceService.start_timer` / `finish_timer` / `create_maintenance_from_timer`.
+  - Data e horários vêm do **relógio do servidor**, no fuso `MAINTENANCE_TIMEZONE` (padrão `America/Sao_Paulo`). `maintenance_date` é a data do início.
+  - **Nada é gravado no banco antes do cadastro final.** Os horários viajam num token assinado com HMAC-SHA256 (chave `MAINTENANCE_TIMER_SECRET` no `.env`), que o front end guarda e pode ler, mas não alterar.
+  - Limitações aceitas: manutenções em andamento não aparecem para ninguém; o token se perde se o front end não o guardar (e no `localStorage` ele só existe naquele dispositivo); o mesmo token pode ser reenviado e duplicar a manutenção; uma duração de 24 h ou mais é registrada errada, porque não cabe em dois campos `TIME`.
 
 ### 4.5 Regra de integridade de domínio ainda não garantida por essas FKs
 
@@ -372,9 +381,8 @@ Se o usuário pedir apenas explicação conceitual, não modificar arquivos. Se 
 - Como a regra de subconjunto pertencente à máquina será protegida no banco, além do Service?
 - Qual é a política de exclusão/inativação de manutenções, técnicos, operadores e máquinas com histórico?
 - Quais operações de negócio e campos adicionais de manutenção serão aprovados além dos já existentes (por exemplo, status)? Data, horários, serviço, problema, tipo, duração e descrição já estão no banco (seção 4.4).
-- Um `time_end` menor que `time_start` deve ser sempre aceito como passagem pela meia-noite, ou o Service deve pedir confirmação ou limitar a duração?
-- Uma manutenção corretiva com `problem` vazio ou só com espaços deve ser recusada? Hoje o banco aceita; decidir se a regra fica no Service, em um `CHECK`, ou em ambos.
 - Como serão expostas e administradas as funções técnicas no frontend/API?
+- Cronômetro: as limitações aceitas (seção 4.4) devem ser revistas se for preciso ver manutenções em andamento ou impedir o reenvio do mesmo token. As duas soluções exigem guardar estado no servidor, e a de reenvio, provavelmente uma tabela nova (decisão de esquema).
 - Qual a organização efetiva dos pacotes Python e o gerenciamento de dependências?
 
 ## 10. Checklist de início de uma nova sessão Claude Code

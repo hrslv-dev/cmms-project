@@ -25,6 +25,23 @@ class Config:
             "DB_PASSWORD": os.getenv("DB_PASSWORD"),
         }
 
+    @staticmethod
+    def load_timer_settings():
+        """Carrega a configuração do cronômetro de manutenção do mesmo `.env`.
+
+        - `MAINTENANCE_TIMER_SECRET`: chave usada para assinar os tokens do
+          cronômetro. Retorna `None` se ausente; quem usa decide o que fazer.
+        - `MAINTENANCE_TIMEZONE`: fuso do relógio do servidor; padrão
+          `America/Sao_Paulo`.
+
+        Nenhum valor é impresso.
+        """
+        load_dotenv(dotenv_path=Path(__file__).with_name(".env"))
+        return {
+            "MAINTENANCE_TIMER_SECRET": os.getenv("MAINTENANCE_TIMER_SECRET"),
+            "MAINTENANCE_TIMEZONE": os.getenv("MAINTENANCE_TIMEZONE", "America/Sao_Paulo"),
+        }
+
     # Faz a conexão com o banco de dados
     @staticmethod
     def make_connection():
