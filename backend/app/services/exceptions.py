@@ -58,3 +58,7 @@ class InvalidMaintenanceTypeError(DomainError):
 
 class InvalidProblemError(DomainError):
     """``problem`` ausente em corretiva ou fora das categorias permitidas."""
+
+
+class InvalidMaintenancePeriodError(DomainError):
+    """``started_at``/``finished_at`` sem fuso, ausentes ou fim antes do início."""

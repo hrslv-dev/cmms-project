@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from datetime import date, time
+from datetime import datetime
 
 import sqlalchemy.orm as orm
 
@@ -14,6 +14,7 @@ from app.repository.technician_repository import TechnicianRepository
 from app.services.enums import MaintenanceType, ProblemCategory
 from app.services.exceptions import (
     DuplicateSubsetLinkError,
+    InvalidMaintenancePeriodError,
     InvalidMaintenanceTypeError,
     InvalidProblemError,
     NotFoundError,
@@ -35,9 +36,10 @@ class MaintenanceService:
        obrigatório (vazio ou só espaços é recusado); em preventiva é opcional.
        No banco a coluna continua ``TEXT`` livre.
 
-    Horário: NÃO há validação. Um ``time_end`` menor que ``time_start`` é
-    aceito e o banco o trata como passagem pela meia-noite (14:00 → 13:00
-    resulta em 23 horas). Essa foi uma decisão explícita de negócio.
+    3. Período: ``started_at`` e ``finished_at`` precisam ter fuso, e o fim
+       não pode ser anterior ao início. A ordem também é garantida pelo CHECK
+       ``ck_maintenance_finished_after_started``; checar aqui antes dá uma
+       mensagem clara em vez de um ``IntegrityError``.
 
     Transação: cada método público é uma unidade de trabalho; em qualquer
     erro, ``rollback`` desfaz tudo o que o caso de uso já havia enviado.
@@ -57,22 +59,26 @@ class MaintenanceService:
         *,
         machine_id: int,
         technician_id: int,
-        maintenance_date: date,
-        time_start: time,
+        started_at: datetime,
         service: str,
         maintenance_type: MaintenanceType | str,
         operator_id: int | None = None,
-        time_end: time | None = None,
+        finished_at: datetime | None = None,
         problem: ProblemCategory | str | None = None,
         description: str | None = None,
         subset_ids: Iterable[int] = (),
     ) -> MaintenanceModel:
         """Registra uma manutenção e, opcionalmente, vincula subconjuntos.
 
+        ``started_at``/``finished_at`` são ``datetime`` com fuso, por exemplo
+        ``datetime(2026, 9, 14, 11, 30, tzinfo=ZoneInfo("America/Sao_Paulo"))``.
+        ``finished_at=None`` registra a manutenção como em andamento.
+
         Tudo acontece em UMA transação: se qualquer subconjunto for inválido,
         nem a manutenção nem os vínculos anteriores ficam gravados.
         """
         try:
+            self._validate_period(started_at, finished_at)
             self._ensure_exists(self.machine_repository, "Máquina", machine_id)
             self._ensure_exists(self.technician_repository, "Técnico", technician_id)
             if operator_id is not None:
@@ -86,9 +92,8 @@ class MaintenanceService:
                     machine_id=machine_id,
                     technician_id=technician_id,
                     operator_id=operator_id,
-                    maintenance_date=maintenance_date,
-                    time_start=time_start,
-                    time_end=time_end,
+                    started_at=started_at,
+                    finished_at=finished_at,
                     service=service,
                     maintenance_type=type_.value,
                     problem=problem_value,
@@ -171,6 +176,33 @@ class MaintenanceService:
             raise InvalidProblemError(
                 f"Problema inválido: {problem!r}. Use: {allowed}."
             ) from None
+
+    @staticmethod
+    def _validate_period(started_at: datetime, finished_at: datetime | None) -> None:
+        """Exige ``datetime`` com fuso e fim não anterior ao início.
+
+        Por que exigir o fuso: o PostgreSQL interpreta um horário SEM fuso no
+        fuso da sessão do banco. O mesmo "08:00" viraria instantes diferentes
+        conforme a configuração da conexão, sem nenhum erro. Recusar é mais
+        seguro do que adivinhar.
+        """
+        to_check = {"started_at": started_at}
+        if finished_at is not None:  # None = em andamento, permitido
+            to_check["finished_at"] = finished_at
+        for label, value in to_check.items():
+            if not isinstance(value, datetime):
+                raise InvalidMaintenancePeriodError(
+                    f"{label} deve ser data e hora (datetime), recebido: {value!r}."
+                )
+            if value.utcoffset() is None:
+                raise InvalidMaintenancePeriodError(
+                    f"{label} precisa de fuso horário, "
+                    "por exemplo 2026-09-14T11:30:00-03:00."
+                )
+        if finished_at is not None and finished_at < started_at:
+            raise InvalidMaintenancePeriodError(
+                "finished_at não pode ser anterior a started_at."
+            )
 
     @staticmethod
     def _ensure_exists(repository, entity: str, entity_id: int) -> None:

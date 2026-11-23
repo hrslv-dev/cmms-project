@@ -1,0 +1,84 @@
+// DER do CMMS — fonte da imagem docs/DER-maintenance-software.png
+// Regerar com:  dot -Tpng -Gdpi=150 docs/DER-maintenance-software.dot -o docs/DER-maintenance-software.png
+// Notação pé de galinha: ||  exatamente um | |o  zero ou um | o{  zero ou muitos
+// Atualizado em 23/11/2026: maintenance passou a usar started_at/finished_at (TIMESTAMPTZ).
+
+digraph DER {
+    graph [rankdir=TB, splines=spline, nodesep=0.7, ranksep=0.9, bgcolor="white",
+           fontname="DejaVu Sans", pad=0.3];
+    node  [shape=plain, fontname="DejaVu Sans", fontsize=12];
+    edge  [dir=both, color="#333333", fontname="DejaVu Sans", fontsize=11, fontcolor="#333333"];
+
+    technical_functions [label=<
+      <table border="1" cellborder="1" cellspacing="0" cellpadding="6" color="#9370DB">
+        <tr><td colspan="4" bgcolor="#ECECFF"><b>technical_functions</b></td></tr>
+        <tr><td align="left">int</td><td align="left">id</td><td>PK</td><td></td></tr>
+        <tr><td align="left">varchar</td><td align="left">name</td><td>UK</td><td></td></tr>
+        <tr><td align="left">boolean</td><td align="left">active</td><td></td><td align="left">padrão true</td></tr>
+      </table>>];
+
+    technicians [label=<
+      <table border="1" cellborder="1" cellspacing="0" cellpadding="6" color="#9370DB">
+        <tr><td colspan="3" bgcolor="#ECECFF"><b>technicians</b></td></tr>
+        <tr><td align="left">int</td><td align="left">id</td><td>PK</td></tr>
+        <tr><td align="left">varchar</td><td align="left">name</td><td></td></tr>
+        <tr><td align="left">int</td><td align="left">function_id</td><td>FK</td></tr>
+      </table>>];
+
+    operators [label=<
+      <table border="1" cellborder="1" cellspacing="0" cellpadding="6" color="#9370DB">
+        <tr><td colspan="3" bgcolor="#ECECFF"><b>operators</b></td></tr>
+        <tr><td align="left">int</td><td align="left">id</td><td>PK</td></tr>
+        <tr><td align="left">varchar</td><td align="left">name</td><td></td></tr>
+      </table>>];
+
+    machines [label=<
+      <table border="1" cellborder="1" cellspacing="0" cellpadding="6" color="#9370DB">
+        <tr><td colspan="3" bgcolor="#ECECFF"><b>machines</b></td></tr>
+        <tr><td align="left">int</td><td align="left">id</td><td>PK</td></tr>
+        <tr><td align="left">varchar</td><td align="left">name</td><td></td></tr>
+      </table>>];
+
+    subsets [label=<
+      <table border="1" cellborder="1" cellspacing="0" cellpadding="6" color="#9370DB">
+        <tr><td colspan="3" bgcolor="#ECECFF"><b>subsets</b></td></tr>
+        <tr><td align="left">int</td><td align="left">id</td><td>PK</td></tr>
+        <tr><td align="left">varchar</td><td align="left">name</td><td></td></tr>
+        <tr><td align="left">int</td><td align="left">machine_id</td><td>FK</td></tr>
+      </table>>];
+
+    maintenance [label=<
+      <table border="1" cellborder="1" cellspacing="0" cellpadding="6" color="#9370DB">
+        <tr><td colspan="4" bgcolor="#ECECFF"><b>maintenance</b></td></tr>
+        <tr><td align="left">int</td><td align="left">id</td><td>PK</td><td></td></tr>
+        <tr><td align="left">int</td><td align="left">operator_id</td><td>FK</td><td align="left">opcional</td></tr>
+        <tr><td align="left">int</td><td align="left">technician_id</td><td>FK</td><td></td></tr>
+        <tr><td align="left">int</td><td align="left">machine_id</td><td>FK</td><td></td></tr>
+        <tr><td align="left">varchar</td><td align="left">service</td><td></td><td align="left">10 opções (CHECK)</td></tr>
+        <tr><td align="left">text</td><td align="left">problem</td><td></td><td align="left">nulo só se Preventiva</td></tr>
+        <tr><td align="left">varchar</td><td align="left">type</td><td></td><td align="left">Corretiva ou Preventiva</td></tr>
+        <tr><td align="left">text</td><td align="left">description</td><td></td><td align="left">opcional</td></tr>
+        <tr><td align="left">timestamptz</td><td align="left">started_at</td><td></td><td align="left">início: data, hora e fuso</td></tr>
+        <tr><td align="left">timestamptz</td><td align="left">finished_at</td><td></td><td align="left">nulo = em andamento; ≥ started_at</td></tr>
+        <tr><td align="left">interval</td><td align="left">elapsed_time</td><td></td><td align="left">gerada: finished_at − started_at</td></tr>
+      </table>>];
+
+    subsets_maintenance [label=<
+      <table border="1" cellborder="1" cellspacing="0" cellpadding="6" color="#9370DB">
+        <tr><td colspan="4" bgcolor="#ECECFF"><b>subsets_maintenance</b></td></tr>
+        <tr><td align="left">int</td><td align="left">id</td><td>PK</td><td></td></tr>
+        <tr><td align="left">int</td><td align="left">subset_id</td><td>FK</td><td></td></tr>
+        <tr><td align="left">int</td><td align="left">maintenance_id</td><td>FK</td><td align="left">UK composta com subset_id</td></tr>
+      </table>>];
+
+    // arrowtail = lado "um"; arrowhead = lado "muitos"
+    technical_functions -> technicians [label=" classifica", arrowtail=teetee, arrowhead=crowodot];
+    operators   -> maintenance [label=" registra", arrowtail=teeodot, arrowhead=crowodot];
+    technicians -> maintenance [label=" executa",  arrowtail=teetee,  arrowhead=crowodot];
+    machines    -> maintenance [label=" recebe",   arrowtail=teetee,  arrowhead=crowodot];
+    machines    -> subsets     [label=" possui",   arrowtail=teetee,  arrowhead=crowodot];
+    maintenance -> subsets_maintenance [label=" possui",    arrowtail=teetee, arrowhead=crowodot];
+    subsets     -> subsets_maintenance [label=" participa", arrowtail=teetee, arrowhead=crowodot];
+
+    { rank=same; technical_functions; operators; machines; }
+}

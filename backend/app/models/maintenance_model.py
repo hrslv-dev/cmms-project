@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, time, timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sq
@@ -21,11 +21,15 @@ class MaintenanceModel(Base):
     Os subconjuntos NÃO ficam mais em uma coluna desta tabela: a relação com
     ``subsets`` é N:N e passa por ``subsets_maintenance`` (``subset_links``).
 
-    Dois atributos têm nome Python diferente do nome da coluna:
-    ``maintenance_date`` (coluna ``date``) e ``maintenance_type`` (coluna
-    ``type``). Um atributo chamado ``date`` esconderia a classe
-    ``datetime.date`` usada nas anotações, e ``type`` esconderia a função
-    embutida do Python. Os demais atributos repetem o nome da coluna.
+    Período: ``started_at`` e ``finished_at`` são ``TIMESTAMPTZ``, instantes
+    completos (data + hora + fuso). O PostgreSQL guarda o instante absoluto
+    (internamente em UTC), não o nome do fuso; ao ler, converte para o fuso
+    da sessão, e o psycopg2 devolve ``datetime`` com deslocamento (ex.:
+    ``-03:00``). ``finished_at`` NULL significa manutenção em andamento.
+
+    Um atributo tem nome Python diferente do nome da coluna:
+    ``maintenance_type`` (coluna ``type``), para não esconder a função
+    embutida ``type``. Os demais atributos repetem o nome da coluna.
     """
 
     __tablename__ = "maintenance"
@@ -45,6 +49,11 @@ class MaintenanceModel(Base):
             "type <> 'Corretiva' OR problem IS NOT NULL",
             name="ck_maintenance_problem_corrective",
         ),
+        # O fim não pode ser anterior ao início (em andamento = NULL).
+        sq.CheckConstraint(
+            "finished_at IS NULL OR finished_at >= started_at",
+            name="ck_maintenance_finished_after_started",
+        ),
         sq.Index("idx_maintenance_operator", "operator_id"),
         sq.Index("idx_maintenance_technician", "technician_id"),
         sq.Index("idx_maintenance_machine", "machine_id"),
@@ -63,34 +72,31 @@ class MaintenanceModel(Base):
         sq.ForeignKey("machines.id", name="fk_maintenance_machine"),
         nullable=False,
     )
-    maintenance_date: orm.Mapped[date] = orm.mapped_column(
-        "date", sq.Date, nullable=False
-    )
-    time_start: orm.Mapped[time] = orm.mapped_column(sq.Time, nullable=False)
-    # NULL significa manutenção ainda em andamento.
-    time_end: orm.Mapped[time | None] = orm.mapped_column(sq.Time, nullable=True)
     service: orm.Mapped[str] = orm.mapped_column(sq.String(20), nullable=False)
     problem: orm.Mapped[str | None] = orm.mapped_column(sq.Text, nullable=True)
     maintenance_type: orm.Mapped[str] = orm.mapped_column(
         "type", sq.String(20), nullable=False
     )
+    description: orm.Mapped[str | None] = orm.mapped_column(sq.Text, nullable=True)
+    # ``DateTime(timezone=True)`` corresponde a TIMESTAMPTZ. Grave sempre
+    # ``datetime`` COM fuso: um horário sem fuso seria interpretado no fuso
+    # da sessão do banco, que pode não ser o da fábrica.
+    started_at: orm.Mapped[datetime] = orm.mapped_column(
+        sq.DateTime(timezone=True), nullable=False
+    )
+    # NULL significa manutenção ainda em andamento.
+    finished_at: orm.Mapped[datetime | None] = orm.mapped_column(
+        sq.DateTime(timezone=True), nullable=True
+    )
     # Coluna gerada pelo banco (GENERATED ALWAYS ... STORED). ``Computed`` faz
     # o ORM nunca enviá-la em INSERT/UPDATE e ler o valor calculado de volta.
-    # Se ``time_end`` for menor que ``time_start``, o banco entende que a
-    # manutenção atravessou a meia-noite e soma 24 horas.
+    # É a diferença real entre dois instantes: 26 h viram
+    # ``timedelta(days=1, hours=2)``; NULL enquanto ``finished_at`` for NULL.
     elapsed_time: orm.Mapped[timedelta | None] = orm.mapped_column(
         sq.Interval,
-        sq.Computed(
-            "CASE "
-            "WHEN time_end IS NULL THEN NULL::interval "
-            "WHEN time_end >= time_start THEN time_end - time_start "
-            "ELSE time_end - time_start + INTERVAL '24 hours' "
-            "END",
-            persisted=True,
-        ),
+        sq.Computed("finished_at - started_at", persisted=True),
         nullable=True,
     )
-    description: orm.Mapped[str | None] = orm.mapped_column(sq.Text, nullable=True)
 
     operator: orm.Mapped[OperatorModel | None] = orm.relationship(
         back_populates="maintenances"
