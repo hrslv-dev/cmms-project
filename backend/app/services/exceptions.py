@@ -58,11 +58,3 @@ class InvalidMaintenanceTypeError(DomainError):
 
 class InvalidProblemError(DomainError):
     """``problem`` ausente em corretiva ou fora das categorias permitidas."""
-
-
-class InvalidTimerTokenError(DomainError):
-    """Token do cronômetro malformado ou com assinatura inválida (adulterado)."""
-
-
-class TimerStateError(DomainError):
-    """Ação fora de ordem: encerrar duas vezes ou cadastrar sem encerrar."""

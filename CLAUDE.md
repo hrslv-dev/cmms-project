@@ -231,10 +231,7 @@ Regras de aplicação para `maintenance`, decididas pelo usuário em 17 de novem
 
 - **`problem`:** limitado ao `Enum` `ProblemCategory` (`'Mecânico'`, `'Elétrico'`, `'Outro'`, em `backend/app/services/enums.py`). Em corretiva é obrigatório, e vazio ou só espaços é recusado. Em preventiva é opcional; se informado, também precisa ser do `Enum`. **O banco não foi alterado:** a coluna continua `TEXT` livre, e escritas fora do Service não passam por essa regra.
 - **Horário:** sem validação. O horário invertido é aceito e o banco o trata como passagem pela meia-noite.
-- **Cronômetro (Iniciar → Encerrar → Cadastrar):** decidido pelo usuário em 17 de novembro de 2026 e implementado em `backend/app/services/maintenance_timer.py` e `MaintenanceService.start_timer` / `finish_timer` / `create_maintenance_from_timer`.
-  - Data e horários vêm do **relógio do servidor**, no fuso `MAINTENANCE_TIMEZONE` (padrão `America/Sao_Paulo`). `maintenance_date` é a data do início.
-  - **Nada é gravado no banco antes do cadastro final.** Os horários viajam num token assinado com HMAC-SHA256 (chave `MAINTENANCE_TIMER_SECRET` no `.env`), que o front end guarda e pode ler, mas não alterar.
-  - Limitações aceitas: manutenções em andamento não aparecem para ninguém; o token se perde se o front end não o guardar (e no `localStorage` ele só existe naquele dispositivo); o mesmo token pode ser reenviado e duplicar a manutenção; uma duração de 24 h ou mais é registrada errada, porque não cabe em dois campos `TIME`.
+- **Cronômetro: removido.** Um fluxo Iniciar → Encerrar → Cadastrar, com token assinado por HMAC, foi implementado em 17 de novembro de 2026 (commit `c2eb7d8`) e removido em 23 de novembro de 2026 por decisão do usuário, por ser complexo demais para a primeira versão. Data e horários da manutenção são informados diretamente em `MaintenanceService.create_maintenance`. Não reintroduzir sem nova decisão.
 
 ### 4.5 Regra de integridade de domínio ainda não garantida por essas FKs
 
@@ -382,7 +379,6 @@ Se o usuário pedir apenas explicação conceitual, não modificar arquivos. Se 
 - Qual é a política de exclusão/inativação de manutenções, técnicos, operadores e máquinas com histórico?
 - Quais operações de negócio e campos adicionais de manutenção serão aprovados além dos já existentes (por exemplo, status)? Data, horários, serviço, problema, tipo, duração e descrição já estão no banco (seção 4.4).
 - Como serão expostas e administradas as funções técnicas no frontend/API?
-- Cronômetro: as limitações aceitas (seção 4.4) devem ser revistas se for preciso ver manutenções em andamento ou impedir o reenvio do mesmo token. As duas soluções exigem guardar estado no servidor, e a de reenvio, provavelmente uma tabela nova (decisão de esquema).
 - Qual a organização efetiva dos pacotes Python e o gerenciamento de dependências?
 
 ## 10. Checklist de início de uma nova sessão Claude Code
