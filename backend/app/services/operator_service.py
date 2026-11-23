@@ -62,6 +62,14 @@ class OperatorService:
             raise
         return operator
 
+    def list_operators(self) -> list[OperatorModel]:
+        """Lista todos os operadores em ordem alfabética (``id``, ``name``).
+
+        Sem operadores, devolve a lista vazia. Só leitura: não faz ``commit``
+        (ver ``MachineService``).
+        """
+        return self.operator_repository.list_ordered_by_name()
+
     # ------------------------------------------------------------------ regras
 
     @staticmethod
