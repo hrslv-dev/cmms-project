@@ -36,7 +36,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from app.services.exceptions import InvalidTimerTokenError, TimerStateError
 
@@ -60,8 +60,19 @@ def _b64encode(raw: bytes) -> str:
 
 
 def _b64decode(text: str) -> bytes:
+    """Decodifica base64url aceitando SOMENTE a forma que ``_b64encode`` produz.
+
+    O decodificador do Python é tolerante: descarta caracteres fora do
+    alfabeto (``"abc!!"`` vira ``"abc"``) e aceita mais de uma grafia para os
+    mesmos bytes, porque o último caractere carrega bits de sobra. Com isso,
+    várias strings diferentes seriam aceitas como o mesmo token. Reencodificar
+    o resultado e comparar com o texto recebido garante uma única forma válida.
+    """
     # O "=" de preenchimento é removido no token; aqui ele é recolocado.
-    return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
+    raw = base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
+    if _b64encode(raw) != text:
+        raise ValueError("base64url fora da forma canônica.")
+    return raw
 
 
 class MaintenanceTimer:
@@ -92,7 +103,17 @@ class MaintenanceTimer:
             raise TimerConfigurationError(
                 "MAINTENANCE_TIMER_SECRET não está definido no .env."
             )
-        return cls(secret, ZoneInfo(settings["MAINTENANCE_TIMEZONE"]))
+        tz_name = settings["MAINTENANCE_TIMEZONE"]
+        try:
+            tz = ZoneInfo(tz_name)
+        # ZoneInfoNotFoundError: nome bem formado, mas inexistente ("Fuso/X").
+        # ValueError: nome malformado ("" ou "../algo").
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise TimerConfigurationError(
+                f"MAINTENANCE_TIMEZONE inválido: {tz_name!r}. "
+                "Use um nome da base IANA, como 'America/Sao_Paulo'."
+            ) from exc
+        return cls(secret, tz)
 
     # ----------------------------------------------------------------- público
 

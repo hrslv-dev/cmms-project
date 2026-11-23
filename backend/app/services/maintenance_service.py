@@ -173,8 +173,10 @@ class MaintenanceService:
             technician_id=technician_id,
             operator_id=operator_id,
             maintenance_date=data.start.date(),
-            time_start=data.start.time().replace(tzinfo=None),
-            time_end=data.end.time().replace(tzinfo=None),
+            # .time() já devolve o horário SEM fuso (quem o preserva é
+            # .timetz()), que é o formato da coluna TIME.
+            time_start=data.start.time(),
+            time_end=data.end.time(),
             service=service,
             maintenance_type=maintenance_type,
             problem=problem,
