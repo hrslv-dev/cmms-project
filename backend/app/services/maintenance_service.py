@@ -11,12 +11,13 @@ from app.repository.operator_repository import OperatorRepository
 from app.repository.subset_maintenance_repository import SubsetMaintenanceRepository
 from app.repository.subset_repository import SubsetRepository
 from app.repository.technician_repository import TechnicianRepository
-from app.services.enums import MaintenanceType, ProblemCategory
+from app.services.enums import MaintenanceType, ProblemCategory, ServiceCategory
 from app.services.exceptions import (
     DuplicateSubsetLinkError,
     InvalidMaintenancePeriodError,
     InvalidMaintenanceTypeError,
     InvalidProblemError,
+    InvalidServiceError,
     NotFoundError,
     SubsetMachineMismatchError,
 )
@@ -40,6 +41,9 @@ class MaintenanceService:
        não pode ser anterior ao início. A ordem também é garantida pelo CHECK
        ``ck_maintenance_finished_after_started``; checar aqui antes dá uma
        mensagem clara em vez de um ``IntegrityError``.
+    4. ``service`` deve ser um valor de ``ServiceCategory`` (as 10 opções do
+       CHECK ``ck_maintenance_service``). Pelo mesmo motivo da regra 3, a
+       checagem vem antes de o banco recusar a linha.
 
     Transação: cada método público é uma unidade de trabalho; em qualquer
     erro, ``rollback`` desfaz tudo o que o caso de uso já havia enviado.
@@ -60,7 +64,7 @@ class MaintenanceService:
         machine_id: int,
         technician_id: int,
         started_at: datetime,
-        service: str,
+        service: ServiceCategory | str,
         maintenance_type: MaintenanceType | str,
         operator_id: int | None = None,
         finished_at: datetime | None = None,
@@ -84,6 +88,7 @@ class MaintenanceService:
             if operator_id is not None:
                 self._ensure_exists(self.operator_repository, "Operador", operator_id)
 
+            service_ = self._parse_service(service)
             type_ = self._parse_type(maintenance_type)
             problem_value = self._validate_problem(type_, problem)
 
@@ -94,7 +99,7 @@ class MaintenanceService:
                     operator_id=operator_id,
                     started_at=started_at,
                     finished_at=finished_at,
-                    service=service,
+                    service=service_.value,
                     maintenance_type=type_.value,
                     problem=problem_value,
                     description=description,
@@ -142,6 +147,22 @@ class MaintenanceService:
         return self.link_repository.add(
             SubsetMaintenanceModel(maintenance_id=maintenance.id, subset_id=subset.id)
         )
+
+    @staticmethod
+    def _parse_service(value: ServiceCategory | str) -> ServiceCategory:
+        """Converte para ``ServiceCategory`` ou levanta ``InvalidServiceError``.
+
+        Mesmo padrão de ``_parse_type``: a comparação é exata, diferencia
+        maiúsculas/minúsculas e acentos ("reparo" e "Inspecao" são recusados).
+        ``None`` e ``""`` também são recusados, pois a coluna é ``NOT NULL``.
+        """
+        try:
+            return ServiceCategory(value)
+        except ValueError:
+            allowed = ", ".join(s.value for s in ServiceCategory)
+            raise InvalidServiceError(
+                f"Serviço inválido: {value!r}. Use: {allowed}."
+            ) from None
 
     @staticmethod
     def _parse_type(value: MaintenanceType | str) -> MaintenanceType:

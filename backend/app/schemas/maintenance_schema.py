@@ -6,25 +6,10 @@ de máquina/técnico/operador) ficam no ``MaintenanceService``.
 """
 
 from datetime import datetime, timedelta
-from typing import Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
-from app.services.enums import MaintenanceType, ProblemCategory
-
-# Espelha o CHECK ck_maintenance_service do banco.
-ServiceName = Literal[
-    "Inspeção",
-    "Lubrificação",
-    "Substituição",
-    "Ajuste",
-    "Limpeza",
-    "Reparo",
-    "Instalação",
-    "Configuração",
-    "Calibração",
-    "Modificação",
-]
+from app.services.enums import MaintenanceType, ProblemCategory, ServiceCategory
 
 
 class MaintenanceCreate(BaseModel):
@@ -42,7 +27,7 @@ class MaintenanceCreate(BaseModel):
     operator_id: int | None = Field(default=None, gt=0)
     started_at: AwareDatetime
     finished_at: AwareDatetime | None = None
-    service: ServiceName
+    service: ServiceCategory
     maintenance_type: MaintenanceType
     problem: ProblemCategory | None = None
     description: str | None = None

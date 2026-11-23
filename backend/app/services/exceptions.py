@@ -62,3 +62,26 @@ class InvalidProblemError(DomainError):
 
 class InvalidMaintenancePeriodError(DomainError):
     """``started_at``/``finished_at`` sem fuso, ausentes ou fim antes do início."""
+
+
+class InvalidServiceError(DomainError):
+    """O serviço informado não está entre as 10 opções de ``ServiceCategory``."""
+
+
+class InvalidOperatorNameError(DomainError):
+    """O nome do operador não atende às regras de cadastro."""
+
+
+class DuplicateOperatorError(DomainError):
+    """Já existe um operador com o mesmo nome.
+
+    ``existing_id`` permite que quem chamou (por exemplo, a futura API)
+    aponte para o cadastro existente em vez de só recusar.
+    """
+
+    def __init__(self, existing_id: int, existing_name: str) -> None:
+        self.existing_id = existing_id
+        self.existing_name = existing_name
+        super().__init__(
+            f"Já existe o operador '{existing_name}' (id {existing_id})."
+        )

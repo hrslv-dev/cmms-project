@@ -11,9 +11,16 @@ class SubsetRepository(GenericRepository[SubsetModel]):
         super().__init__(session, SubsetModel)
 
     def list_by_machine_id(self, machine_id: int) -> list[SubsetModel]:
-        """Lista os subconjuntos associados à máquina informada."""
-        stmt = sq.select(SubsetModel).where(
-            SubsetModel.machine_id == machine_id
+        """Lista os subconjuntos da máquina informada, em ordem alfabética.
+
+        O ``id`` desempata nomes iguais. Uma máquina inexistente e uma máquina
+        sem subconjuntos devolvem a mesma lista vazia; quem precisa distinguir
+        os dois casos (o Service) verifica a máquina antes.
+        """
+        stmt = (
+            sq.select(SubsetModel)
+            .where(SubsetModel.machine_id == machine_id)
+            .order_by(SubsetModel.name, SubsetModel.id)
         )
         return list(self.session.scalars(stmt).all())
 

@@ -55,6 +55,18 @@ class TechnicianService:
             raise
         return technician
 
+    def list_technicians(self) -> list[TechnicianModel]:
+        """Lista todos os técnicos em ordem alfabética.
+
+        Não filtra pela função: técnicos cuja função foi desativada DEPOIS
+        do cadastro continuam válidos e aparecem na lista. A regra de função
+        ativa vale só no momento de atribuir a função
+        (``create_technician`` e ``change_function``).
+
+        Só leitura: não faz ``commit`` (ver ``MachineService``).
+        """
+        return self.technician_repository.list_ordered_by_name()
+
     def _get_active_function(self, function_id: int) -> TechnicalFunctionModel:
         """Retorna a função, garantindo que existe e está ativa."""
         function = self.function_repository.search_by_id(function_id)
