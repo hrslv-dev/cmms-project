@@ -1,5 +1,7 @@
 """Schemas da API para manutenções."""
 
+from typing import Annotated
+
 from pydantic import (
     AwareDatetime,
     BaseModel,
@@ -34,7 +36,8 @@ class MaintenanceCreate(BaseModel):
     operator_id: int | None = Field(default=None, gt=0)
     problem: ProblemCategory | None = None  # obrigatório em corretiva
     description: str | None = None
-    subset_ids: list[int] = Field(default_factory=list)  # Começa vazia
+    # Começa vazia; cada item deve ser maior que 0
+    subset_ids: list[Annotated[int, Field(gt=0)]] = Field(default_factory=list)
 
     @field_validator("description")
     @classmethod
