@@ -36,7 +36,7 @@ class MaintenanceCreate(BaseModel):
     operator_id: int | None = Field(default=None, gt=0)
     problem: ProblemCategory | None = None  # obrigatório em corretiva
     description: str | None = None
-    # Começa vazia; cada item deve ser maior que 0
+    # Começa vazia; cada item deve ser maior que 0; repetidos são removidos
     subset_ids: list[Annotated[int, Field(gt=0)]] = Field(default_factory=list)
 
     @field_validator("description")
@@ -44,6 +44,15 @@ class MaintenanceCreate(BaseModel):
     def blank_to_none(cls, value: str | None) -> str | None:
         """Trata texto vazio ou só com espaços como ``None`` (não preenchido)."""
         return value if value and value.strip() else None
+
+    @field_validator("subset_ids")
+    @classmethod
+    def remove_duplicate_ids(cls, value: list[int]) -> list[int]:
+        """Remove ids repetidos, mantendo a ordem em que foram enviados.
+
+        Repetir um subconjunto é tratado como a mesma escolha, não como erro.
+        """
+        return list(dict.fromkeys(value))
 
     @model_validator(mode="after")
     def validate_problem(self) -> "MaintenanceCreate":
