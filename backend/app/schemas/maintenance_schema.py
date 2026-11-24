@@ -41,9 +41,11 @@ class MaintenanceCreate(BaseModel):
 
     @field_validator("description")
     @classmethod
-    def blank_to_none(cls, value: str | None) -> str | None:
-        """Trata texto vazio ou só com espaços como ``None`` (não preenchido)."""
-        return value if value and value.strip() else None
+    def normalize_description(cls, value: str | None) -> str | None:
+        """Apara os espaços do início e do fim; se não sobrar texto, é ``None``."""
+        if value is None:
+            return None
+        return value.strip() or None
 
     @field_validator("subset_ids")
     @classmethod
