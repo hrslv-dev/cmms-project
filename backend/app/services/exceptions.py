@@ -64,6 +64,10 @@ class InvalidMaintenancePeriodError(DomainError):
     """``started_at``/``finished_at`` sem fuso, ausentes ou fim antes do início."""
 
 
+class InvalidDescriptionError(DomainError):
+    """``description`` informada, mas vazia, só com espaços ou que não é texto."""
+
+
 class InvalidServiceError(DomainError):
     """O serviço informado não está entre as 10 opções de ``ServiceCategory``."""
 

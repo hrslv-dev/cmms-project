@@ -14,6 +14,7 @@ from app.repository.technician_repository import TechnicianRepository
 from app.services.enums import MaintenanceType, ProblemCategory, ServiceCategory
 from app.services.exceptions import (
     DuplicateSubsetLinkError,
+    InvalidDescriptionError,
     InvalidMaintenancePeriodError,
     InvalidMaintenanceTypeError,
     InvalidProblemError,
@@ -37,13 +38,17 @@ class MaintenanceService:
        obrigatório (vazio ou só espaços é recusado); em preventiva é opcional.
        No banco a coluna continua ``TEXT`` livre.
 
-    3. Período: ``started_at`` e ``finished_at`` precisam ter fuso, e o fim
-       não pode ser anterior ao início. A ordem também é garantida pelo CHECK
+    3. Período: ``started_at`` e ``finished_at`` são obrigatórios e precisam
+       ter fuso, e o fim não pode ser anterior ao início. No banco,
+       ``finished_at`` ainda aceita NULL. A ordem também é garantida pelo CHECK
        ``ck_maintenance_finished_after_started``; checar aqui antes dá uma
        mensagem clara em vez de um ``IntegrityError``.
     4. ``service`` deve ser um valor de ``ServiceCategory`` (as 10 opções do
        CHECK ``ck_maintenance_service``). Pelo mesmo motivo da regra 3, a
        checagem vem antes de o banco recusar a linha.
+    5. ``description`` é opcional (``None``), mas, se informada, não pode ser
+       vazia nem só espaços. Aqui o valor em branco é RECUSADO; convertê-lo em
+       ``None`` é papel do schema.
 
     Transação: cada método público é uma unidade de trabalho; em qualquer
     erro, ``rollback`` desfaz tudo o que o caso de uso já havia enviado.
@@ -64,10 +69,10 @@ class MaintenanceService:
         machine_id: int,
         technician_id: int,
         started_at: datetime,
+        finished_at: datetime,
         service: ServiceCategory | str,
         maintenance_type: MaintenanceType | str,
         operator_id: int | None = None,
-        finished_at: datetime | None = None,
         problem: ProblemCategory | str | None = None,
         description: str | None = None,
         subset_ids: Iterable[int] = (),
@@ -76,13 +81,14 @@ class MaintenanceService:
 
         ``started_at``/``finished_at`` são ``datetime`` com fuso, por exemplo
         ``datetime(2026, 9, 14, 11, 30, tzinfo=ZoneInfo("America/Sao_Paulo"))``.
-        ``finished_at=None`` registra a manutenção como em andamento.
+        Ambos são obrigatórios: só se registra manutenção já encerrada.
 
         Tudo acontece em UMA transação: se qualquer subconjunto for inválido,
         nem a manutenção nem os vínculos anteriores ficam gravados.
         """
         try:
             self._validate_period(started_at, finished_at)
+            self._validate_description(description)
             self._ensure_exists(self.machine_repository, "Máquina", machine_id)
             self._ensure_exists(self.technician_repository, "Técnico", technician_id)
             if operator_id is not None:
@@ -199,17 +205,26 @@ class MaintenanceService:
             ) from None
 
     @staticmethod
-    def _validate_period(started_at: datetime, finished_at: datetime | None) -> None:
-        """Exige ``datetime`` com fuso e fim não anterior ao início.
+    def _validate_description(description: str | None) -> None:
+        """Recusa ``description`` em branco, sem alterar o valor recebido."""
+        if description is None:
+            return
+        if not isinstance(description, str) or not description.strip():
+            raise InvalidDescriptionError(
+                "description deve ser um texto não vazio ou None, "
+                f"recebido: {description!r}."
+            )
+
+    @staticmethod
+    def _validate_period(started_at: datetime, finished_at: datetime) -> None:
+        """Exige início e fim (``datetime`` com fuso), com fim não anterior.
 
         Por que exigir o fuso: o PostgreSQL interpreta um horário SEM fuso no
         fuso da sessão do banco. O mesmo "08:00" viraria instantes diferentes
         conforme a configuração da conexão, sem nenhum erro. Recusar é mais
         seguro do que adivinhar.
         """
-        to_check = {"started_at": started_at}
-        if finished_at is not None:  # None = em andamento, permitido
-            to_check["finished_at"] = finished_at
+        to_check = {"started_at": started_at, "finished_at": finished_at}
         for label, value in to_check.items():
             if not isinstance(value, datetime):
                 raise InvalidMaintenancePeriodError(
@@ -220,7 +235,7 @@ class MaintenanceService:
                     f"{label} precisa de fuso horário, "
                     "por exemplo 2026-09-14T11:30:00-03:00."
                 )
-        if finished_at is not None and finished_at < started_at:
+        if finished_at < started_at:
             raise InvalidMaintenancePeriodError(
                 "finished_at não pode ser anterior a started_at."
             )
