@@ -1,6 +1,6 @@
 # CLAUDE.md — Maintenance Software | Contexto, arquitetura e regras de trabalho
 
-> **Estado do contexto:** 23 de novembro de 2026.  
+> **Estado do contexto:** 24 de novembro de 2026.  
 > **Idioma de comunicação:** português brasileiro.  
 > **Idioma preferencial dos identificadores técnicos:** inglês (`snake_case` no banco; convenções idiomáticas de Python no código).  
 > **Natureza do documento:** contrato de colaboração e referência de decisões de domínio. Não substitui a inspeção do repositório nem a confirmação do esquema efetivamente instalado no PostgreSQL.
@@ -9,7 +9,7 @@
 
 1. **Atue como engenheiro de software sênior que orienta um desenvolvedor júnior.** Não entregue apenas código: explique o raciocínio, os conceitos de Python/SQLAlchemy/PostgreSQL, as causas dos erros e os trade-offs arquiteturais. Evite explicações excessivamente superficiais.
 2. **Não altere o banco de dados por conta própria.** O proprietário do projeto realiza manualmente a criação, exclusão e alteração de tabelas e constraints. Não execute `CREATE`, `ALTER`, `DROP`, `TRUNCATE`, migrações Alembic, `Base.metadata.create_all()`, `Base.metadata.drop_all()` nem comandos destrutivos ou de escrita contra o banco real sem autorização explícita e específica. Pode redigir SQL para revisão humana quando solicitado.
-3. **Reconfirme o estado do banco antes de afirmá-lo.** Em 13 de novembro de 2026, o esquema de sete tabelas foi conferido no catálogo do banco `cmms`, e os Models e repositories foram alinhados a ele. Em 23 de novembro de 2026, as colunas de tempo de `maintenance` foram migradas para `started_at`/`finished_at`, e os Models foram realinhados e reconferidos (seção 6.2). Isso descreve aquelas datas: não presuma que banco e Models continuam iguais sem inspecionar.
+3. **Reconfirme o estado do banco antes de afirmá-lo.** Em 13 de novembro de 2026, o esquema de sete tabelas foi conferido no catálogo do banco `cmms`, e os Models e repositories foram alinhados a ele. Em 23 de novembro de 2026, as colunas de tempo de `maintenance` foram migradas para `started_at`/`finished_at`, e os Models foram realinhados e reconferidos (seção 6.2). Em 24 de novembro de 2026, o `MaintenanceModel` passou a divergir do banco, por decisão do usuário, na nulidade de `finished_at` e `elapsed_time` (`docs/pendencia-alinhamento-banco.md`). Isso descreve aquelas datas: não presuma que banco e Models continuam iguais sem inspecionar.
 4. **Não introduza entidades `Intervention`, `Intervencao`, `Incident`, `Incidencia` ou tabelas de associação de técnico/operador com manutenção.** Essas alternativas foram consideradas e descartadas após validação das regras com o cliente. Também não inclua `components` no escopo atual.
 5. **Respeite estritamente as cardinalidades aprovadas** (seção 4). Mudanças só mediante nova decisão explícita do usuário.
 6. **Não renomeie tabelas ou colunas silenciosamente.** O esquema aprovado utiliza `maintenance` (singular), `subsets`, `subsets_maintenance` e `technical_functions`, mesmo que outras opções de inglês pareçam mais naturais.
@@ -155,7 +155,7 @@ erDiagram
         varchar type "Corretiva ou Preventiva"
         text description "opcional"
         timestamptz started_at "inicio: data, hora e fuso"
-        timestamptz finished_at "nulo = em andamento; >= started_at"
+        timestamptz finished_at "obrigatorio na aplicacao; banco ainda aceita nulo; >= started_at"
         interval elapsed_time "gerada: finished_at - started_at"
     }
     SUBSETS_MAINTENANCE {
@@ -200,8 +200,8 @@ Colunas de dados de `maintenance`, na ordem em que estão no banco:
 | `type` | `VARCHAR(20) NOT NULL` | `ck_maintenance_type`: `'Corretiva'` ou `'Preventiva'`. |
 | `description` | `TEXT NULL` | Opcional. |
 | `started_at` | `TIMESTAMPTZ NOT NULL` | Início da manutenção: data, hora e fuso. |
-| `finished_at` | `TIMESTAMPTZ NULL` | Fim da manutenção. `NULL` significa em andamento. `ck_maintenance_finished_after_started`: `finished_at IS NULL OR finished_at >= started_at`. |
-| `elapsed_time` | `INTERVAL`, `GENERATED ALWAYS AS (finished_at - started_at) STORED` | Duração real calculada pelo banco, em dias e horas (26 h aparecem como `1 day 02:00:00`). `NULL` enquanto `finished_at` for `NULL`. Nunca enviar em `INSERT`/`UPDATE`. |
+| `finished_at` | `TIMESTAMPTZ NULL` | Fim da manutenção. Obrigatório na aplicação e `NOT NULL` no Model; o banco ainda aceita `NULL` (pendência em `docs/pendencia-alinhamento-banco.md`). `ck_maintenance_finished_after_started`: `finished_at IS NULL OR finished_at >= started_at`. |
+| `elapsed_time` | `INTERVAL`, `GENERATED ALWAYS AS (finished_at - started_at) STORED` | Duração real calculada pelo banco, em dias e horas (26 h aparecem como `1 day 02:00:00`). `NOT NULL` no Model; no banco, é `NULL` se `finished_at` for `NULL` (mesma pendência). Nunca enviar em `INSERT`/`UPDATE`. |
 
 `TIMESTAMPTZ` guarda o **instante absoluto** (internamente em UTC), **não** o nome do fuso nem um texto formatado. Ao ler, o PostgreSQL converte o instante para o fuso da sessão (`2026-09-14 11:30:00-03` em `America/Sao_Paulo`, `2026-09-14 14:30:00+00` em UTC), e o psycopg2 devolve `datetime` com deslocamento (`-03:00`), não com o nome `America/Sao_Paulo`. Formatos como `14-09-26 11:30` são só apresentação (`to_char` no SQL ou `strftime` no Python).
 
@@ -232,6 +232,8 @@ Regras de aplicação para `maintenance`, decididas pelo usuário em 17 de novem
 
 - **`problem`:** limitado ao `Enum` `ProblemCategory` (`'Mecânico'`, `'Elétrico'`, `'Outro'`, em `backend/app/services/enums.py`). Em corretiva é obrigatório, e vazio ou só espaços é recusado. Em preventiva é opcional; se informado, também precisa ser do `Enum`. **O banco não foi alterado:** a coluna continua `TEXT` livre, e escritas fora do Service não passam por essa regra.
 - **Período (23 de novembro de 2026):** o Service exige que `started_at` e `finished_at` sejam `datetime` **com fuso** e recusa fim anterior ao início (`InvalidMaintenancePeriodError`), antes de o `CHECK` do banco ser atingido. A decisão anterior, de aceitar horário invertido como passagem pela meia-noite, foi substituída com a migração para `started_at`/`finished_at`. O schema `MaintenanceCreate` aplica as mesmas regras na entrada (`AwareDatetime`).
+- **Só manutenção encerrada (24 de novembro de 2026):** não se registra mais manutenção em andamento. `finished_at` é obrigatório no `MaintenanceCreate` e no Service, que recusa `None` com `InvalidMaintenancePeriodError`. No `MaintenanceModel`, `finished_at` e `elapsed_time` são `NOT NULL`, mas `nullable=False` não valida em Python: enquanto o banco aceitar `NULL`, escritas fora do Service ainda podem gravá-lo. **O banco não foi alterado**, por decisão do usuário; o SQL pendente está em `docs/pendencia-alinhamento-banco.md`.
+- **`description` (24 de novembro de 2026):** opcional. Em branco, o schema converte para `None`; o Service não converte e recusa com `InvalidDescriptionError`.
 - **Cronômetro: removido.** Um fluxo Iniciar → Encerrar → Cadastrar, com token assinado por HMAC, foi implementado em 17 de novembro de 2026 (commit `c2eb7d8`) e removido em 23 de novembro de 2026 por decisão do usuário, por ser complexo demais para a primeira versão. Início e fim da manutenção (`started_at`/`finished_at`) são informados diretamente em `MaintenanceService.create_maintenance`. Não reintroduzir sem nova decisão.
 
 ### 4.5 Regra de integridade de domínio ainda não garantida por essas FKs
@@ -317,6 +319,11 @@ Confirmado em 23 de novembro de 2026, com autorização explícita do usuário p
 - `MaintenanceModel`, `MaintenanceService.create_maintenance` e `backend/app/schemas/maintenance_schema.py` foram atualizados. As tabelas geradas a partir dos Models em um PostgreSQL descartável têm as mesmas 27 colunas, 21 constraints e 15 índices do banco real, e os repositories de manutenção leem o banco sem erro.
 - 38 testes de integridade com dados fictícios rodaram no banco real dentro de uma transação encerrada com `ROLLBACK`. O banco continua sem linhas, mas as sequências de ID avançaram: o primeiro cadastro real não terá id 1.
 
+Decidido em 24 de novembro de 2026, sem alteração no banco:
+
+- `MaintenanceModel.finished_at` e `elapsed_time` passaram a `NOT NULL`. O banco continua aceitando `NULL` nas duas colunas, então os Models deixaram de coincidir com ele nesse ponto. A divergência é intencional e temporária (`docs/pendencia-alinhamento-banco.md`).
+- Em um PostgreSQL descartável, o caminho schema + Service funcionou com as colunas `NOT NULL` e também aceitando `NULL`, como no banco real.
+
 Não confirmado:
 
 - Se existem backups ou dados das tabelas antigas a preservar fora do banco atual.
@@ -327,7 +334,7 @@ Não confirmado:
 
 ### 6.3 Ponto de retomada recomendado
 
-**Fase atual: testes de persistência no repositório, sobre Models e repositories já alinhados ao esquema PostgreSQL aprovado.**
+**Fase atual: testes de persistência no repositório, sobre Models e repositories alinhados ao esquema PostgreSQL aprovado, exceto pela nulidade de `finished_at` e `elapsed_time` (seção 6.2).**
 
 Os passos 1 a 5 abaixo foram concluídos em 13 de novembro de 2026; retomar no passo 6.
 
@@ -351,7 +358,7 @@ Testar, preferencialmente em PostgreSQL isolado:
 - Criar manutenção com `operator_id = NULL` (válido) e com operador existente (válido).
 - Rejeitar manutenção com `technician_id` ou `machine_id` inexistentes (FK).
 - Rejeitar manutenção com `type` ou `service` fora das listas dos `CHECK`s, e manutenção corretiva com `problem = NULL`; aceitar preventiva sem `problem`.
-- Verificar `elapsed_time`: `NULL` com `finished_at = NULL`, diferença no mesmo dia, cruzamento da meia-noite, duração acima de 24 h e de vários dias, e recálculo ao preencher `finished_at` depois. Rejeitar `finished_at` anterior a `started_at` (CHECK) e, no Service, `datetime` sem fuso.
+- Verificar `elapsed_time`: diferença no mesmo dia, cruzamento da meia-noite, duração acima de 24 h e de vários dias, e recálculo ao alterar `finished_at`. Rejeitar `finished_at` anterior a `started_at` (CHECK) e, no Service, `finished_at = None` e `datetime` sem fuso. Depois do alinhamento do banco, verificar que ele também recusa `NULL`.
 - Permitir várias manutenções com o mesmo técnico, operador ou máquina.
 - Permitir vários subconjuntos em uma manutenção e várias manutenções para o mesmo subconjunto.
 - Rejeitar associação duplicada `(maintenance_id, subset_id)`.
@@ -383,6 +390,7 @@ Se o usuário pedir apenas explicação conceitual, não modificar arquivos. Se 
 - O projeto mantém Models de componentes da versão anterior? Devem ser removidos do código, arquivados ou apenas desconsiderados nesta etapa?
 - Como a regra de subconjunto pertencente à máquina será protegida no banco, além do Service?
 - Qual é a política de exclusão/inativação de manutenções, técnicos, operadores e máquinas com histórico?
+- Quando aplicar no banco o `NOT NULL` de `finished_at` e `elapsed_time`? (SQL em `docs/pendencia-alinhamento-banco.md`.)
 - Quais operações de negócio e campos adicionais de manutenção serão aprovados além dos já existentes (por exemplo, status)? Início e fim (`started_at`/`finished_at`), serviço, problema, tipo, duração e descrição já estão no banco (seção 4.4).
 - Como serão expostas e administradas as funções técnicas no frontend/API?
 - Qual a organização efetiva dos pacotes Python e o gerenciamento de dependências?

@@ -25,7 +25,12 @@ class MaintenanceModel(Base):
     completos (data + hora + fuso). O PostgreSQL guarda o instante absoluto
     (internamente em UTC), não o nome do fuso; ao ler, converte para o fuso
     da sessão, e o psycopg2 devolve ``datetime`` com deslocamento (ex.:
-    ``-03:00``). ``finished_at`` NULL significa manutenção em andamento.
+    ``-03:00``).
+
+    Divergência temporária e intencional: aqui ``finished_at`` e
+    ``elapsed_time`` são NOT NULL, mas no banco as duas colunas ainda aceitam
+    NULL. ``nullable=False`` só vale para o DDL gerado a partir do model; não
+    impede o ORM de enviar ou ler NULL enquanto o banco aceitar.
 
     Um atributo tem nome Python diferente do nome da coluna:
     ``maintenance_type`` (coluna ``type``), para não esconder a função
@@ -49,7 +54,8 @@ class MaintenanceModel(Base):
             "type <> 'Corretiva' OR problem IS NOT NULL",
             name="ck_maintenance_problem_corrective",
         ),
-        # O fim não pode ser anterior ao início (em andamento = NULL).
+        # O fim não pode ser anterior ao início. Mesmo texto do CHECK do banco,
+        # onde ``finished_at`` ainda aceita NULL.
         sq.CheckConstraint(
             "finished_at IS NULL OR finished_at >= started_at",
             name="ck_maintenance_finished_after_started",
@@ -84,18 +90,17 @@ class MaintenanceModel(Base):
     started_at: orm.Mapped[datetime] = orm.mapped_column(
         sq.DateTime(timezone=True), nullable=False
     )
-    # NULL significa manutenção ainda em andamento.
-    finished_at: orm.Mapped[datetime | None] = orm.mapped_column(
-        sq.DateTime(timezone=True), nullable=True
+    finished_at: orm.Mapped[datetime] = orm.mapped_column(
+        sq.DateTime(timezone=True), nullable=False
     )
     # Coluna gerada pelo banco (GENERATED ALWAYS ... STORED). ``Computed`` faz
     # o ORM nunca enviá-la em INSERT/UPDATE e ler o valor calculado de volta.
     # É a diferença real entre dois instantes: 26 h viram
-    # ``timedelta(days=1, hours=2)``; NULL enquanto ``finished_at`` for NULL.
-    elapsed_time: orm.Mapped[timedelta | None] = orm.mapped_column(
+    # ``timedelta(days=1, hours=2)``.
+    elapsed_time: orm.Mapped[timedelta] = orm.mapped_column(
         sq.Interval,
         sq.Computed("finished_at - started_at", persisted=True),
-        nullable=True,
+        nullable=False,
     )
 
     operator: orm.Mapped[OperatorModel | None] = orm.relationship(
