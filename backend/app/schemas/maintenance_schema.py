@@ -17,14 +17,14 @@ class MaintenanceCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     # Obrigatórios: não têm valor padrão
-    machine_id: int
-    technician_id: int
+    machine_id: int = Field(gt=0)
+    technician_id: int = Field(gt=0)
     started_at: AwareDatetime  # data e hora COM fuso
     service: ServiceCategory
     maintenance_type: MaintenanceType
 
     # Opcionais: têm valor padrão
-    operator_id: int | None = None
+    operator_id: int | None = Field(default=None, gt=0)
     finished_at: AwareDatetime | None = None  # None = em andamento
     problem: ProblemCategory | None = None
     description: str | None = None
