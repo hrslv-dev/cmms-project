@@ -1,7 +1,5 @@
 """Schemas da API para manutenções."""
 
-from typing import Any
-
 from pydantic import (
     AwareDatetime,
     BaseModel,
@@ -38,13 +36,11 @@ class MaintenanceCreate(BaseModel):
     description: str | None = None
     subset_ids: list[int] = Field(default_factory=list)  # Começa vazia
 
-    @field_validator("description", mode="before")
+    @field_validator("description")
     @classmethod
-    def blank_to_none(cls, value: Any) -> Any:
+    def blank_to_none(cls, value: str | None) -> str | None:
         """Trata texto vazio ou só com espaços como ``None`` (não preenchido)."""
-        if isinstance(value, str) and not value.strip():
-            return None
-        return value
+        return value if value and value.strip() else None
 
     @model_validator(mode="after")
     def validate_problem(self) -> "MaintenanceCreate":
