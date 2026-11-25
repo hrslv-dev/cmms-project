@@ -1,7 +1,7 @@
 """Schemas da API para manutenções."""
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Annotated, Any
 
 from pydantic import (
@@ -12,10 +12,6 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-
-# Data extrema é gravada e quebra leitura. 
-# São aceitos erros de digitação e datas extratosfericamente fora do padrão. 
-# Commits atualizados no remoto. 
 
 from app.services.enums import MaintenanceType, ProblemCategory, ServiceCategory
 
@@ -97,7 +93,42 @@ class MaintenanceCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_period(self) -> "MaintenanceCreate":
-        """Recusa fim anterior ao início, como o CHECK do banco."""
+        """Recusa fim anterior ao início, como o CHECK do banco
+        Fim igual ao inicio passa."""
         if self.finished_at < self.started_at:
             raise ValueError("finished_at não pode ser anterior a started_at")
         return self
+
+
+class MaintenanceRead(BaseModel):
+    """Dados devolvidos pela API, montados a partir do ``MaintenanceModel``.
+
+    Não repete as regras da entrada: ``service``, ``maintenance_type`` e
+    ``problem`` são ``str``, para que um valor gravado fora do Service (no
+    banco, ``problem`` é texto livre) não impeça a leitura do registro.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    machine_id: int
+    technician_id: int
+    operator_id: int | None
+    started_at: datetime
+    finished_at: datetime
+    elapsed_time: timedelta  # no JSON, duração ISO 8601 (ex.: "PT2H30M")
+    service: str
+    maintenance_type: str
+    problem: str | None
+    description: str | None
+    # Lido de ``MaintenanceModel.subset_links``; no JSON sai como ``subset_ids``
+    subset_ids: list[int] = Field(validation_alias="subset_links")
+
+    @field_validator("subset_ids", mode="before")
+    @classmethod
+    def extract_subset_ids(cls, links: Any) -> list[int]:
+        """Troca cada vínculo pelo id do subconjunto, em ordem crescente.
+
+        A sessão precisa estar aberta: ler ``subset_links`` faz uma consulta.
+        """
+        return sorted(link.subset_id for link in links)

@@ -24,11 +24,10 @@ class TechnicianCreate(BaseModel):
     function_id: int = Field(gt=0)
 
 
-class TechnicianResponse(BaseModel):
+class TechnicianRead(BaseModel):
     """Dados devolvidos pela API, montados a partir do ``TechnicianModel``."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str
-    function_id: int
