@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import sqlalchemy.orm as orm
 
@@ -23,6 +23,13 @@ from app.services.exceptions import (
     SubsetMachineMismatchError,
 )
 
+# Início mais antigo aceito. Barra erros de digitação ("0226") e datas extremas
+# que o PostgreSQL grava, mas o ``datetime`` do Python não consegue ler de volta.
+EARLIEST_START = datetime(2000, 1, 1, tzinfo=timezone.utc)
+
+# Folga para o relógio de quem envia estar adiantado em relação ao do servidor.
+CLOCK_TOLERANCE = timedelta(minutes=5)
+
 
 class MaintenanceService:
     """Casos de uso de manutenções e do vínculo com subconjuntos.
@@ -42,7 +49,9 @@ class MaintenanceService:
        ter fuso, e o fim não pode ser anterior ao início. No banco,
        ``finished_at`` ainda aceita NULL. A ordem também é garantida pelo CHECK
        ``ck_maintenance_finished_after_started``; checar aqui antes dá uma
-       mensagem clara em vez de um ``IntegrityError``.
+       mensagem clara em vez de um ``IntegrityError``. O período também deve
+       caber na faixa ``EARLIEST_START <= started_at <= finished_at <= agora +
+       CLOCK_TOLERANCE`` (só da aplicação; o banco não tem esses limites).
     4. ``service`` deve ser um valor de ``ServiceCategory`` (as 10 opções do
        CHECK ``ck_maintenance_service``). Pelo mesmo motivo da regra 3, a
        checagem vem antes de o banco recusar a linha.
@@ -217,12 +226,17 @@ class MaintenanceService:
 
     @staticmethod
     def _validate_period(started_at: datetime, finished_at: datetime) -> None:
-        """Exige início e fim (``datetime`` com fuso), com fim não anterior.
+        """Exige início e fim (``datetime`` com fuso), em ordem e na faixa aceita.
 
         Por que exigir o fuso: o PostgreSQL interpreta um horário SEM fuso no
         fuso da sessão do banco. O mesmo "08:00" viraria instantes diferentes
         conforme a configuração da conexão, sem nenhum erro. Recusar é mais
         seguro do que adivinhar.
+
+        Entre ``datetime`` com fuso, o Python compara instantes: os limites
+        estão em UTC, mas valem para qualquer fuso recebido. Basta um piso
+        para o início e um teto para o fim, porque o fim não pode ser
+        anterior ao início.
         """
         to_check = {"started_at": started_at, "finished_at": finished_at}
         for label, value in to_check.items():
@@ -238,6 +252,16 @@ class MaintenanceService:
         if finished_at < started_at:
             raise InvalidMaintenancePeriodError(
                 "finished_at não pode ser anterior a started_at."
+            )
+        if started_at < EARLIEST_START:
+            raise InvalidMaintenancePeriodError(
+                "started_at não pode ser anterior a "
+                f"{EARLIEST_START.isoformat()}, recebido: {started_at.isoformat()}."
+            )
+        if finished_at > datetime.now(timezone.utc) + CLOCK_TOLERANCE:
+            raise InvalidMaintenancePeriodError(
+                "finished_at não pode estar no futuro, "
+                f"recebido: {finished_at.isoformat()}."
             )
 
     @staticmethod

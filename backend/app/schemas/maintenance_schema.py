@@ -1,6 +1,8 @@
 """Schemas da API para manutenções."""
 
-from typing import Annotated
+import re
+from datetime import datetime
+from typing import Annotated, Any
 
 from pydantic import (
     AwareDatetime,
@@ -11,14 +13,23 @@ from pydantic import (
     model_validator,
 )
 
+# Data extrema é gravada e quebra leitura. 
+# São aceitos erros de digitação e datas extratosfericamente fora do padrão. 
+# Commits atualizados no remoto. 
+
 from app.services.enums import MaintenanceType, ProblemCategory, ServiceCategory
+
+# Começo de "2026-09-14T11:30:00-03:00": data ISO, separador e hora. O resto
+# (data existente, fuso) é conferido pelo ``AwareDatetime``.
+_DATE_AND_TIME = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt ][0-9]{2}:")
 
 
 class MaintenanceCreate(BaseModel):
     """Dados que o cliente envia para registrar uma manutenção.
 
     As regras de negócio (existência de máquina/técnico/operador, subconjunto
-    da mesma máquina) ficam no ``MaintenanceService``.
+    da mesma máquina, data mínima do início e fim que não esteja no futuro)
+    ficam no ``MaintenanceService``.
     """
 
     # Recusa os campos que não estejam na ficha
@@ -38,6 +49,24 @@ class MaintenanceCreate(BaseModel):
     description: str | None = None
     # Começa vazia; cada item deve ser maior que 0; repetidos são removidos
     subset_ids: list[Annotated[int, Field(gt=0)]] = Field(default_factory=list)
+
+    @field_validator("started_at", "finished_at", mode="before")
+    @classmethod
+    def require_date_and_time(cls, value: Any) -> Any:
+        """Aceita só texto com data e hora (ou um ``datetime`` já pronto).
+
+        Por padrão, o Pydantic lê números, inclusive em texto (``"0"``), como
+        timestamp Unix em UTC. O cliente escaparia de informar o fuso.
+        ``mode="before"`` roda antes dessa conversão.
+        """
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str) and _DATE_AND_TIME.match(value):
+            return value
+        raise ValueError(
+            "informe data e hora com fuso em texto, "
+            "por exemplo 2026-09-14T11:30:00-03:00"
+        )
 
     @field_validator("description")
     @classmethod

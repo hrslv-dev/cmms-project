@@ -61,7 +61,11 @@ class InvalidProblemError(DomainError):
 
 
 class InvalidMaintenancePeriodError(DomainError):
-    """``started_at``/``finished_at`` sem fuso, ausentes ou fim antes do início."""
+    """Período inválido.
+
+    ``started_at``/``finished_at`` ausentes ou sem fuso, fim antes do início,
+    início antes de ``EARLIEST_START`` ou fim no futuro.
+    """
 
 
 class InvalidDescriptionError(DomainError):
