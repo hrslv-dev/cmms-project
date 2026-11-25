@@ -288,6 +288,7 @@ As foreign keys simples aprovadas não impedem esse caso. Portanto:
 - Pydantic deve validar entrada/saída, sem substituir restrições de banco.
 - API FastAPI, quando implementada, deve usar dependências para sessões/services e traduzir erros de domínio em respostas HTTP adequadas.
 - Evitar acoplar Models ORM diretamente a contratos HTTP sem decisão explícita.
+- **Formato de erro (25 de novembro de 2026):** todo erro da API tem `code` (identificador fixo, em inglês), `message` (português) e `details` (objeto, `{}` se vazio). `code` e `details` ficam nas exceções de `backend/app/services/exceptions.py`; o status HTTP, só em `backend/app/api/error_handlers.py`. Por decisão do usuário, registro inexistente responde 404 (`not_found`) também quando o id vem no corpo; URL inexistente usa `route_not_found`. Duplicidade responde 409; as demais violações, 422.
 - Não inventar endpoints, autenticação, permissões ou regras de status antes de definir requisitos.
 
 ## 6. Histórico do desenvolvimento e estado atual

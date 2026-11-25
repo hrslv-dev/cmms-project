@@ -31,5 +31,5 @@ class SubsetService:
         - máquina sem subconjuntos: devolve ``[]``.
         """
         if self.machine_repository.search_by_id(machine_id) is None:
-            raise NotFoundError("Máquina", machine_id)
+            raise NotFoundError("machine", machine_id)
         return self.subset_repository.list_by_machine_id(machine_id)

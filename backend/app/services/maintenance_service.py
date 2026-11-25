@@ -98,10 +98,10 @@ class MaintenanceService:
         try:
             self._validate_period(started_at, finished_at)
             self._validate_description(description)
-            self._ensure_exists(self.machine_repository, "Máquina", machine_id)
-            self._ensure_exists(self.technician_repository, "Técnico", technician_id)
+            self._ensure_exists(self.machine_repository, "machine", machine_id)
+            self._ensure_exists(self.technician_repository, "technician", technician_id)
             if operator_id is not None:
-                self._ensure_exists(self.operator_repository, "Operador", operator_id)
+                self._ensure_exists(self.operator_repository, "operator", operator_id)
 
             service_ = self._parse_service(service)
             type_ = self._parse_type(maintenance_type)
@@ -134,7 +134,7 @@ class MaintenanceService:
         try:
             maintenance = self.maintenance_repository.search_by_id(maintenance_id)
             if maintenance is None:
-                raise NotFoundError("Manutenção", maintenance_id)
+                raise NotFoundError("maintenance", maintenance_id)
             link = self._link_subset(maintenance, subset_id)
             self.session.commit()
         except Exception:
@@ -150,7 +150,7 @@ class MaintenanceService:
         """Aplica a regra da mesma máquina e grava o vínculo (sem commit)."""
         subset = self.subset_repository.search_by_id(subset_id)
         if subset is None:
-            raise NotFoundError("Subconjunto", subset_id)
+            raise NotFoundError("subset", subset_id)
         if subset.machine_id != maintenance.machine_id:
             raise SubsetMachineMismatchError(
                 subset.id, subset.machine_id, maintenance.machine_id
@@ -265,6 +265,6 @@ class MaintenanceService:
             )
 
     @staticmethod
-    def _ensure_exists(repository, entity: str, entity_id: int) -> None:
+    def _ensure_exists(repository, resource: str, entity_id: int) -> None:
         if repository.search_by_id(entity_id) is None:
-            raise NotFoundError(entity, entity_id)
+            raise NotFoundError(resource, entity_id)

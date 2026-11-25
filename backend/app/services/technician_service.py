@@ -45,7 +45,7 @@ class TechnicianService:
         try:
             technician = self.technician_repository.search_by_id(technician_id)
             if technician is None:
-                raise NotFoundError("Técnico", technician_id)
+                raise NotFoundError("technician", technician_id)
             function = self._get_active_function(function_id)
             technician.function_id = function.id
             self.session.flush()
@@ -71,7 +71,7 @@ class TechnicianService:
         """Retorna a função, garantindo que existe e está ativa."""
         function = self.function_repository.search_by_id(function_id)
         if function is None:
-            raise NotFoundError("Função técnica", function_id)
+            raise NotFoundError("technical_function", function_id)
         if not function.active:
             raise InactiveFunctionError(function.id, function.name)
         return function
