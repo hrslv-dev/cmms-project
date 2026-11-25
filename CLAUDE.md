@@ -320,6 +320,8 @@ Incluído em 25 de novembro de 2026:
 
 - Suíte pytest em `backend/tests`. Executar em `backend/`: `venv/bin/pytest`. Dependências em `backend/requirements-dev.txt`.
 - A suíte sobe um PostgreSQL descartável (precisa de `initdb`/`pg_ctl`; `CMMS_PG_BIN` indica outra pasta) com a estrutura de `docs/sql/02-criar-estrutura-testes.sql`. Nunca usa o banco real: `conftest.py` bloqueia as credenciais do `.env`. Ao mudar o esquema do `cmms`, atualizar o arquivo 02; um teste compara Models e SQL.
+- API da Tela 1: `app/main.py`, `app/api/dependencies.py` (sessão por requisição) e `app/api/routes/`. Executar em `backend/`: `venv/bin/uvicorn app.main:app --reload`. Rotas: `GET /machines`, `GET /machines/{machine_id}/subsets`, `GET /technicians`, `GET` e `POST /operators`, `POST /maintenances`.
+- Bancos: `cmms` (dados reais), `cmms_test` (cadastros manuais em desenvolvimento, definido em `DB_NAME` no `.env`) e o descartável do pytest.
 - Falhas conhecidas ficam como `xfail` estrito: ao corrigi-las, remover o marcador.
 
 Confirmado em 23 de novembro de 2026, com autorização explícita do usuário para alterar o banco:
