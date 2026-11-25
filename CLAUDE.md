@@ -44,7 +44,7 @@ Objetivos funcionais de alto nível:
 | API HTTP | FastAPI | Planejado; implementação atual não verificada |
 | Schemas de transporte | Pydantic | Planejado/estudado; implementação atual não verificada |
 | Frontend | HTML, CSS, JavaScript; framework apenas se justificado | Futuro; não presumir implementação |
-| Testes | Preferir pytest e PostgreSQL de testes, se disponíveis | Cobertura atual não verificada |
+| Testes | pytest com PostgreSQL descartável | Suíte em `backend/tests` |
 
 ### 3.2 Arquitetura desejada
 
@@ -314,7 +314,13 @@ Confirmado em 13 de novembro de 2026, por leitura do catálogo do banco `cmms` e
 - Não há tabelas antigas em português no banco, e as sete tabelas estavam vazias naquela data.
 - Os Models e repositories foram atualizados para os nomes ingleses e para o DER final. As tabelas geradas a partir dos Models em um PostgreSQL descartável tinham as mesmas 28 colunas, 20 constraints e 15 índices do banco.
 - Os sete repositories executaram suas consultas de leitura no banco sem erro de SQL. A escrita foi testada somente no PostgreSQL descartável (16 verificações de persistência, todas aprovadas), com scripts que não fazem parte do repositório.
-- Não há testes automatizados no repositório, e `pytest` não está instalado em `backend/venv`.
+- Naquela data, não havia testes automatizados no repositório nem `pytest` em `backend/venv`.
+
+Incluído em 25 de novembro de 2026:
+
+- Suíte pytest em `backend/tests`. Executar em `backend/`: `venv/bin/pytest`. Dependências em `backend/requirements-dev.txt`.
+- A suíte sobe um PostgreSQL descartável (precisa de `initdb`/`pg_ctl`; `CMMS_PG_BIN` indica outra pasta) com a estrutura de `docs/sql/02-criar-estrutura-testes.sql`. Nunca usa o banco real: `conftest.py` bloqueia as credenciais do `.env`. Ao mudar o esquema do `cmms`, atualizar o arquivo 02; um teste compara Models e SQL.
+- Falhas conhecidas ficam como `xfail` estrito: ao corrigi-las, remover o marcador.
 
 Confirmado em 23 de novembro de 2026, com autorização explícita do usuário para alterar o banco:
 
