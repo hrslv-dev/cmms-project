@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registrar manutenção · Uni-Stein</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script type="module" src="/static/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#form">Ir para o formulário</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-logo">
+        <img src="/static/assets/logo.png" alt="Uni-Stein" id="brand-logo" hidden>
+        <span class="brand-text" id="brand-text">Uni-Stein</span>
+      </span>
+      <span class="brand-sub">Monitoramento de manutenção</span>
+    </div>
+    <nav aria-label="Principal">
+      <a href="/" class="nav-item" aria-current="page">Manutenção</a>
+    </nav>
+    <button type="button" class="btn btn-ghost" id="theme-toggle" aria-pressed="false">
+      <span id="theme-label">Modo escuro</span>
+    </button>
+  </header>
+
+  <div class="banners" id="banners" aria-live="polite"></div>
+
+  <main class="page" id="main">
+    <div class="page-head">
+      <h1>Registrar manutenção</h1>
+      <p class="muted">Preencha depois de concluir o serviço.
+        Campos com <span class="req" aria-hidden="true">*</span> são obrigatórios.</p>
+    </div>
+
+    <div class="layout">
+      <form id="form" class="form" novalidate aria-describedby="form-error">
+        <div id="form-error" class="form-error" tabindex="-1" aria-live="assertive"></div>
+
+        <fieldset class="card" id="section-maintenance_type" tabindex="-1">
+          <legend class="card-title">Tipo de manutenção <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></legend>
+          <div class="choices choices-lg" id="types"></div>
+          <div class="field-error" id="error-maintenance_type" aria-live="polite"></div>
+        </fieldset>
+
+        <fieldset class="card" id="section-machine_id" tabindex="-1">
+          <legend class="card-title">Máquina <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></legend>
+          <div class="choices choices-lg" id="machines"></div>
+          <div class="status" id="machines-status" role="status"></div>
+          <div class="field-error" id="error-machine_id" aria-live="polite"></div>
+        </fieldset>
+
+        <fieldset class="card" id="section-subset_ids" tabindex="-1">
+          <legend class="card-title">Subconjuntos</legend>
+          <p class="hint" id="subsets-hint">Opcional. Selecione um ou mais.</p>
+          <div class="choices" id="subsets"></div>
+          <div class="status" id="subsets-status" role="status"></div>
+          <div class="field-error" id="error-subset_ids" aria-live="polite"></div>
+        </fieldset>
+
+        <fieldset class="card" id="section-problem" tabindex="-1" hidden>
+          <legend class="card-title">Problema <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório em manutenção corretiva)</span></legend>
+          <p class="hint">Que tipo de falha motivou a manutenção corretiva?</p>
+          <div class="choices" id="problems"></div>
+          <div class="field-error" id="error-problem" aria-live="polite"></div>
+        </fieldset>
+
+        <fieldset class="card" id="section-people">
+          <legend class="card-title">Quem</legend>
+          <div class="row">
+            <div class="field" id="section-technician_id" tabindex="-1">
+              <label for="technician">Técnico <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="technician" class="input" aria-describedby="error-technician_id">
+                <option value="">Carregando…</option>
+              </select>
+              <div class="status" id="technician-status" role="status"></div>
+              <div class="field-error" id="error-technician_id" aria-live="polite"></div>
+            </div>
+            <div class="field" id="section-operator_id" tabindex="-1">
+              <label for="operator">Operador <span class="muted">(opcional)</span></label>
+              <select id="operator" class="input" aria-describedby="error-operator_id">
+                <option value="">Carregando…</option>
+              </select>
+              <div class="status" id="operator-status" role="status"></div>
+              <div class="field-error" id="error-operator_id" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-link" id="new-operator-open" aria-expanded="false" aria-controls="new-operator">
+            + Novo operador
+          </button>
+          <div class="new-operator" id="new-operator" hidden>
+            <div class="field">
+              <label for="new-operator-name">Nome e sobrenome do novo operador</label>
+              <input id="new-operator-name" class="input" type="text" autocomplete="off"
+                     maxlength="100" aria-describedby="new-operator-message">
+            </div>
+            <div class="actions">
+              <button type="button" class="btn btn-secondary" id="new-operator-add">Adicionar</button>
+              <button type="button" class="btn btn-link" id="new-operator-cancel">Cancelar</button>
+            </div>
+            <div id="new-operator-message" class="inline-message" aria-live="polite"></div>
+          </div>
+          <div id="people-feedback" class="inline-message" aria-live="polite"></div>
+        </fieldset>
+
+        <fieldset class="card" id="section-period" tabindex="-1">
+          <legend class="card-title">Horários <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></legend>
+          <div class="row">
+            <div class="field-group" role="group" aria-labelledby="start-label">
+              <span class="group-label" id="start-label">Início</span>
+              <div class="inline">
+                <label class="sr-only" for="start-date">Data de início</label>
+                <input id="start-date" class="input input-date" type="date">
+                <label class="sr-only" for="start-time">Hora de início</label>
+                <input id="start-time" class="input input-time" type="time" step="60">
+              </div>
+            </div>
+            <div class="field-group" role="group" aria-labelledby="end-label">
+              <span class="group-label" id="end-label">Fim</span>
+              <div class="inline">
+                <label class="sr-only" for="end-date">Data de fim</label>
+                <input id="end-date" class="input input-date" type="date">
+                <label class="sr-only" for="end-time">Hora de fim</label>
+                <input id="end-time" class="input input-time" type="time" step="60">
+                <button type="button" class="btn btn-secondary" id="end-now">Agora</button>
+              </div>
+            </div>
+          </div>
+          <div id="period-messages" aria-live="polite"></div>
+          <div class="field-error" id="error-period" aria-live="polite"></div>
+          <div class="elapsed">
+            <span class="muted">Tempo decorrido</span>
+            <strong id="elapsed">—</strong>
+          </div>
+        </fieldset>
+
+        <fieldset class="card" id="section-service" tabindex="-1">
+          <legend class="card-title">Serviço realizado <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></legend>
+          <div class="choices" id="services"></div>
+          <div class="field-error" id="error-service" aria-live="polite"></div>
+
+          <div id="section-description" tabindex="-1">
+            <button type="button" class="btn btn-link" id="description-open" aria-expanded="false" aria-controls="description-area">
+              + Adicionar descrição
+            </button>
+            <div class="field description" id="description-area" hidden>
+              <label for="description">Descrição <span class="muted">(opcional)</span></label>
+              <textarea id="description" class="input textarea" rows="4"
+                        aria-describedby="error-description"></textarea>
+            </div>
+            <div class="field-error" id="error-description" aria-live="polite"></div>
+          </div>
+        </fieldset>
+      </form>
+
+      <aside class="summary card" aria-labelledby="summary-title">
+        <h2 id="summary-title">Resumo</h2>
+        <dl id="summary"></dl>
+        <div id="missing" aria-live="polite"></div>
+        <div id="save-result" aria-live="polite"></div>
+        <button type="button" class="btn btn-primary" id="save">Salvar manutenção</button>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

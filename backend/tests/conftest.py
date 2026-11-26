@@ -58,6 +58,10 @@ def request_app():
                 raise
         content = b"".join(m.get("body", b"") for m in sent)
         headers = {k.decode(): v.decode() for k, v in sent[0]["headers"]}
-        return Response(sent[0]["status"], json.loads(content or b"null"), headers, raised)
+        if headers.get("content-type", "").startswith("application/json"):
+            body = json.loads(content or b"null")
+        else:
+            body = content.decode()  # HTML, CSS, JS
+        return Response(sent[0]["status"], body, headers, raised)
 
     return call

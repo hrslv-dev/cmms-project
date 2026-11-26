@@ -1,0 +1,9 @@
+{
+  "name": "cmms-frontend",
+  "private": true,
+  "type": "module",
+  "description": "Tela 1 do CMMS. Sem dependências: só scripts de teste.",
+  "scripts": {
+    "test": "TZ=America/Sao_Paulo node --test tests/"
+  }
+}

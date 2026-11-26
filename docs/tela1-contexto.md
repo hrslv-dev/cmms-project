@@ -1,8 +1,8 @@
 # Tela 1 — Registrar manutenção (contexto para o Claude Code)
 
-> Estado: 25/11/2026. Protótipo visual da Tela 1, desenhado com o Claude no chat.
+> Estado: 26/11/2026. Protótipo visual da Tela 1, desenhado com o Claude no chat.
 > Este arquivo descreve a tela e como cada campo vira o JSON da API.
-> O backend de referência é o repositório `hrslv-dev/cmms-project`, branch `develop`.
+> O backend de referência é o repositório `hrslv-dev/maintenance_software`, branch `develop`.
 > Para as regras de trabalho e do banco, vale o `CLAUDE.md` do repositório.
 > O arquivo `Main.dc.html` (enviado junto) é só referência visual: tokens de cor,
 > textos e estrutura. Ele usa um formato de canvas de design e **não é a base do front real**.
@@ -57,36 +57,77 @@ Ajuste, Limpeza, Reparo, Instalação, Configuração, Calibração, Modificaç�
 
 ## Dados que a tela precisa ler da API
 
-| Para que | O que devolve | Observação |
+| Para que | Rota | Resposta |
 |---|---|---|
-| Seleção de máquina | lista de `{id, name}` | `MachineService.list_machines()` |
-| Subconjuntos da máquina | lista de `{id, name}` | `SubsetService.list_subsets_by_machine(machine_id)`; `NotFoundError` se a máquina não existe |
-| Seleção de técnico | lista de `{id, name}` | `TechnicianService.list_technicians()` |
-| Seleção de operador | lista de `{id, name}` | `OperatorService.list_operators()`, ordem alfabética |
-| Cadastro de operador | `{id, name}` do criado | `OperatorService.create_operator(name)` |
-| Confirmação | a manutenção gravada | `MaintenanceRead`, com `elapsed_time` como duração ISO 8601 (ex.: `PT2H30M`) |
+| Seleção de máquina | `GET /machines` | 200, lista de `{id, name}` em ordem alfabética |
+| Subconjuntos da máquina | `GET /machines/{machine_id}/subsets` | 200, lista de `{id, name}` só daquela máquina; `[]` se não tiver; 404 se a máquina não existe |
+| Seleção de técnico | `GET /technicians` | 200, lista de `{id, name}`; inclui técnicos de função desativada depois do cadastro |
+| Seleção de operador | `GET /operators` | 200, lista de `{id, name}` |
+| Novo operador | `POST /operators` com `{"name": "..."}` | 201, `{id, name}` com o nome normalizado |
+| Salvar | `POST /maintenances` com a ficha `MaintenanceCreate` | 201, a manutenção gravada (`MaintenanceRead`) |
 
-A tela mostra **nomes**, e a ficha de entrada leva **ids**.
+A tela mostra **nomes**, e a ficha de entrada leva **ids**. As listas seguem a ordem
+alfabética do banco (`pt_BR`), com desempate pelo `id`.
+
+`MaintenanceRead` devolve `id`, os campos enviados (já normalizados), `elapsed_time` como
+duração ISO 8601 (`PT2H30M`, `P1DT2H`) e `subset_ids` em ordem crescente. Datas voltam com
+fuso (`2026-11-24T14:10:00-03:00`).
+
+### Erros
+
+Todo erro tem o mesmo formato. O front decide pelo `code`, nunca pelo texto de `message`:
+
+```json
+{"code": "not_found", "message": "Máquina 99 não encontrado(a).",
+ "details": {"resource": "machine", "id": 99}}
+```
+
+| Situação | Status | `code` | `details` |
+|---|---|---|---|
+| Id inexistente (na URL ou no corpo) | 404 | `not_found` | `resource`, `id` |
+| Operador com nome já cadastrado (ignora maiúsculas e espaços) | 409 | `duplicate_operator` | `existing_id`, `existing_name` |
+| Subconjunto de outra máquina | 422 | `subset_machine_mismatch` | `subset_id`, `subset_machine_id`, `maintenance_machine_id` |
+| Fim no futuro ou início antes de 01/01/2000 | 422 | `invalid_maintenance_period` | `{}` |
+| Nome de operador inválido | 422 | `invalid_operator_name` | `{}` |
+| Formato da ficha | 422 | `validation_error` | `errors`: lista de `{field, message}` |
+| Erro inesperado | 500 | `internal_error` | `{}` |
+
+- Em `validation_error`, `field` aponta o campo (`subset_ids.1` para um item da lista).
+  É `null` em regra entre campos (Corretiva sem problema, fim antes do início) e em JSON
+  malformado: mostrar no topo do formulário.
+- `duplicate_operator` permite oferecer "Usar este cadastro?" com `existing_id`.
+- Fim no futuro tem tolerância de 5 minutos, para relógios levemente adiantados.
+- Em qualquer erro, **nada é gravado**: nem a manutenção nem parte dos subconjuntos.
 
 ## Estado do backend (para o Claude Code situar-se)
 
-Pronto e testado: models, persistência, repositories, services da Tela 1 e as fichas de
-**entrada**:
+Implementado e testado, camada por camada:
 
-- `MaintenanceCreate` (`schemas/maintenance_schema.py`): `extra="forbid"`, ids com `gt=0`,
-  `AwareDatetime` em `started_at`/`finished_at` (ambos obrigatórios), Enums para `service`,
-  `maintenance_type` e `problem`, `description` aparada e vazia vira `None`, `subset_ids`
-  sem repetidos e com ids positivos. Recusa Corretiva sem `problem` e fim anterior ao início.
-- `OperatorCreate` (`schemas/operator_schema.py`): só `name`. As regras do nome ficam no
-  `OperatorService` (nome completo, caracteres, tamanho, duplicidade).
+| Camada | Onde |
+|---|---|
+| Models, repositories e Services da Tela 1 | `app/models`, `app/repository`, `app/services` |
+| Fichas de entrada: `MaintenanceCreate`, `OperatorCreate` | `app/schemas` |
+| Fichas de saída: `MachineRead`, `SubsetRead`, `TechnicianRead`, `OperatorRead`, `MaintenanceRead` | `app/schemas` |
+| Tradução de erros de domínio e de validação para HTTP | `app/api/error_handlers.py`, `app/schemas/error_schema.py` |
+| Sessão de banco por requisição | `app/api/dependencies.py` |
+| Rotas | `app/api/routes/` |
+| Aplicação | `app/main.py` |
 
-Ainda **não existe**: fichas de saída (`Read`), rotas da API, `main.py`, sessão de banco
-por requisição, tradução de erros de domínio para HTTP.
+Executar em `backend/`, com o venv ativado: `uvicorn app.main:app --reload`. A
+documentação interativa fica em `http://127.0.0.1:8000/docs`. Em desenvolvimento, o `.env`
+aponta para o banco `cmms_test`, com dados fictícios (`docs/sql/04-dados-ficticios-testes.sql`).
 
-Decisões em aberto sobre as fichas `Read`: se `TechnicianRead` é enxuta (`id`, `name`) ou
-reaproveita a `TechnicianResponse`; se `SubsetRead` leva `machine_id`; se `MaintenanceRead`
-inclui `subset_ids`. Formato de erro proposto: `code` e `message` (e `existing_id`/
-`existing_name` para operador duplicado), ainda sem decisão.
+Testes: `pytest` em `backend/` (unitários em `tests/unit`, sem banco; integração em
+`tests/integration`, com PostgreSQL descartável). `docs/tests.json` reúne os casos de
+`POST /maintenances`, também executados automaticamente.
+
+Decisões fechadas em 25/11/2026: fichas `Read` simples só com `id` e `name`
+(`TechnicianResponse` virou `TechnicianRead`); `MaintenanceRead` inclui `subset_ids`; erros
+com `code`, `message` e `details`; id inexistente no corpo responde 404.
+
+Ainda **não existe**: frontend, autenticação, CORS (necessário se o front rodar em outro
+endereço ou porta) e rotas para cadastrar máquinas, subconjuntos e técnicos (a Tela 1 só
+os lista).
 
 ## Identidade visual (tokens do protótipo)
 
@@ -111,3 +152,10 @@ Os dados reais vêm do banco.
 - Model e banco divergem em `finished_at`/`elapsed_time` (NOT NULL no model; o banco ainda
   aceita NULL). Ver `docs/pendencia-alinhamento-banco.md`.
 - Duplicidade de operador ignora maiúsculas e espaços, mas não acentos.
+- Falhas conhecidas do backend, ainda abertas: `true` em um id é aceito como `1`; o
+  caractere NUL na descrição causa erro 500. O front deve enviar ids numéricos e texto comum.
+- Divergências entre o protótipo e o backend, adiadas: o protótipo recusa início igual ao
+  fim (o backend aceita); o botão "Agora" só existe no fim; o protótipo abre com campos
+  pré-preenchidos; ao trocar para Preventiva, o protótipo só esconde o problema (o front real
+  deve limpá-lo); "Registrar outra" mantém técnico e horários.
+- O protótipo não avisa fim no futuro; o backend recusa com `invalid_maintenance_period`.
