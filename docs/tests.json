@@ -5,7 +5,8 @@
     "Ids pensados para os dados fictícios do cmms_test: máquina 1 tem os subconjuntos 1 a 4; máquina 2, os subconjuntos 5 a 7; máquina 3 não tem subconjuntos; técnicos 1 a 3; operadores 1 e 2.",
     "Confira os ids com GET /machines, /technicians, /operators e /machines/{id}/subsets.",
     "Cada caso com 201 grava uma manutenção de verdade no cmms_test.",
-    "Erros vêm com code, message e details; esperado.code é null nos casos de sucesso."
+    "Erros vêm com code, message e details; esperado.code é null nos casos de sucesso.",
+    "Casos com \"falha_conhecida\" descrevem o comportamento correto, que ainda não acontece; no pytest rodam como falha esperada."
   ],
   "casos": [
     {
@@ -1099,11 +1100,12 @@
       }
     },
     {
-      "caso": "FALHA CONHECIDA: id booleano",
-      "comentario": "true é convertido em 1 e grava na máquina 1. Pendência da revisão; o esperado é 422.",
+      "caso": "Id booleano",
+      "comentario": "true não é um id. Hoje é convertido em 1 e grava na máquina 1 (pendência da revisão).",
+      "falha_conhecida": "Revisão de 25/11/2026: true é convertido em id 1",
       "esperado": {
-        "status": 201,
-        "code": null
+        "status": 422,
+        "code": "validation_error"
       },
       "body": {
         "machine_id": true,

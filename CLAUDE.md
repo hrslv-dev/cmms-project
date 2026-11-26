@@ -318,7 +318,8 @@ Confirmado em 13 de novembro de 2026, por leitura do catálogo do banco `cmms` e
 
 Incluído em 25 de novembro de 2026:
 
-- Suíte pytest em `backend/tests`. Executar em `backend/`: `venv/bin/pytest`. Dependências em `backend/requirements-dev.txt`.
+- Suíte pytest em `backend/tests`, em duas camadas. Executar em `backend/`: `venv/bin/pytest` (tudo), `venv/bin/pytest tests/unit` (sem banco) ou `venv/bin/pytest tests/integration`. Dependências em `backend/requirements-dev.txt`.
+- Princípios da suíte (26 de novembro de 2026): afirmar `status`, `code`, campo e dados gravados, não o texto das mensagens; datas fixas no passado ou derivadas de `EARLIEST_START`/`CLOCK_TOLERANCE`; nunca comparar com ids fixos, exceto nos casos de `docs/tests.json`, que reiniciam a numeração; todo erro deve deixar o banco inalterado (`table_counts`).
 - A suíte sobe um PostgreSQL descartável (precisa de `initdb`/`pg_ctl`; `CMMS_PG_BIN` indica outra pasta) com a estrutura de `docs/sql/02-criar-estrutura-testes.sql`. Nunca usa o banco real: `conftest.py` bloqueia as credenciais do `.env`. Ao mudar o esquema do `cmms`, atualizar o arquivo 02; um teste compara Models e SQL.
 - API da Tela 1: `app/main.py`, `app/api/dependencies.py` (sessão por requisição) e `app/api/routes/`. Executar em `backend/`: `venv/bin/uvicorn app.main:app --reload`. Rotas: `GET /machines`, `GET /machines/{machine_id}/subsets`, `GET /technicians`, `GET` e `POST /operators`, `POST /maintenances`.
 - Bancos: `cmms` (dados reais), `cmms_test` (cadastros manuais em desenvolvimento, definido em `DB_NAME` no `.env`) e o descartável do pytest.
