@@ -1,1 +1,1 @@
-"""Pacote reservado aos casos de uso e serviços da aplicação."""
+"""Casos de uso e regras de negócio do CMMS."""

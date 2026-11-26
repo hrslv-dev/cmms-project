@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Registrar manutenção</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+.t-light{--bg:#F1F4F7;--surface:#FFFFFF;--text:#14202B;--muted:#51606F;--border:#D5DCE3;--border-strong:#7C8A98;--primary:#15446C;--on-primary:#FFFFFF;--accent:#0A8798;--soft:#E2EDF6;--on-soft:#0F3558;--warn-bg:#FFF1CC;--warn-text:#5C3F00;--danger-bg:#FDE9E7;--danger-text:#8F1D14;--ok-bg:#E1F2E5;--ok-text:#1C5A2A;--focus:#0A7C8C;color-scheme:light}
+.t-dark{--bg:#0E1720;--surface:#16222D;--text:#EAF0F5;--muted:#A9B8C6;--border:#2B3B4A;--border-strong:#6F8294;--primary:#45C2D2;--on-primary:#05202A;--accent:#45C2D2;--soft:#143645;--on-soft:#BDECF4;--warn-bg:#3D3000;--warn-text:#FFD875;--danger-bg:#4A1D1A;--danger-text:#FFB4A9;--ok-bg:#17361F;--ok-text:#A5E3B2;--focus:#7AA7FF;color-scheme:dark}
+button,input,select,textarea{font-family:inherit;font-size:15px}
+.nav{display:flex;align-items:center;height:68px;padding:0 14px;color:var(--muted);text-decoration:none;font-weight:500;border-bottom:3px solid transparent}
+.nav:hover{color:var(--text)}
+.nav.on{color:var(--text);border-bottom-color:var(--accent)}
+.seg{display:inline-flex;align-items:center;justify-content:center;gap:10px;flex:1 1 140px;min-height:56px;padding:0 16px;border:1px solid var(--border-strong);border-radius:10px;background:var(--surface);color:var(--text);font-weight:500;font-size:16px;cursor:pointer}
+.seg:hover{border-color:var(--text)}
+.seg.on{background:var(--soft);color:var(--on-soft);border:2px solid var(--primary);font-weight:600}
+.chip{min-height:44px;padding:0 16px;border:1px solid var(--border-strong);border-radius:10px;background:var(--surface);color:var(--text);font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip:hover{border-color:var(--text)}
+.chip.on{background:var(--soft);color:var(--on-soft);border:2px solid var(--primary);font-weight:600}
+.inp{height:44px;padding:0 12px;border:1px solid var(--border-strong);border-radius:8px;background:var(--surface);color:var(--text);min-width:0}
+.inp::placeholder{color:var(--muted)}
+.ghost{min-height:44px;padding:0 14px;border:1px solid var(--border-strong);border-radius:8px;background:transparent;color:var(--text);font-weight:500;cursor:pointer}
+.ghost:hover{background:var(--bg)}
+.linkbtn{min-height:44px;padding:0 4px;border:0;background:transparent;color:var(--text);font-weight:500;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.primary{width:100%;min-height:56px;border:0;border-radius:10px;background:var(--primary);color:var(--on-primary);font-weight:600;font-size:16px;cursor:pointer}
+.primary:hover{filter:brightness(1.06)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="min-height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 0 32px; min-height: 68px">
+<div style="display: flex; align-items: center; gap: 14px; padding: 8px 0">
+<div style="display: flex; background: #FFFFFF; border-radius: 8px; padding: 2px 6px">
+<img src="/_blob/8c25b316c7c3b8dd11a2a38df4e276f1" alt="Uni-Stein, Inovação e Sustentabilidade" style="height: 48px; width: auto; display: block">
+</div>
+<span style="font-size: 13px; color: var(--muted); border-left: 1px solid var(--border); padding-left: 14px">Monitoramento de manutenção</span>
+</div>
+<nav aria-label="Principal" style="display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 auto">
+<a href="#" class="nav on" aria-current="page">Manutenção</a>
+<a href="#" class="nav">Técnicos</a>
+<a href="#" class="nav">Indicadores</a>
+</nav>
+<button type="button" class="ghost" aria-pressed="{{dark}}" onClick="{{toggleTheme}}" style="display: inline-flex; align-items: center; gap: 8px">
+<sc-if value="{{dark}}" hint-placeholder-val="{{ false }}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+</sc-if>
+<sc-if value="{{light}}" hint-placeholder-val="{{ true }}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+</sc-if>
+<span>{{themeLabel}}</span>
+</button>
+</header>
+
+<main style="max-width: 1180px; margin: 0 auto; padding: 32px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<div style="flex: 1 1 100%">
+<h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em">Registrar manutenção</h1>
+<p style="margin: 6px 0 0; color: var(--muted)">Preencha depois de concluir o serviço. Campos com <span style="color: var(--danger-text); font-weight: 600">*</span> são obrigatórios.</p>
+</div>
+
+<form onSubmit="{{onSubmit}}" style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+<fieldset style="margin: 0; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px">
+<legend style="padding: 0 8px; margin-left: -8px; font-size: 16px; font-weight: 600"><span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: var(--surface); font-size: 13px; margin-right: 8px">1</span>Tipo de manutenção <span style="color: var(--danger-text); margin-left: 4px" aria-hidden="true">*</span></legend>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px">
+<sc-for list="{{tipos}}" as="t" hint-placeholder-count="2">
+<button type="button" class="{{t.cls}}" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}">
+<sc-if value="{{t.isPrev}}" hint-placeholder-val="{{ true }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg>
+</sc-if>
+<sc-if value="{{t.isCorr}}" hint-placeholder-val="{{ false }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.01"></path></svg>
+</sc-if>
+{{t.label}}</button>
+</sc-for>
+</div>
+</fieldset>
+
+<fieldset style="margin: 0; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px">
+<legend style="padding: 0 8px; margin-left: -8px; font-size: 16px; font-weight: 600"><span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: var(--surface); font-size: 13px; margin-right: 8px">2</span>Máquina <span style="color: var(--danger-text); margin-left: 4px" aria-hidden="true">*</span></legend>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px">
+<sc-for list="{{machines}}" as="m" hint-placeholder-count="2">
+<button type="button" class="{{m.cls}}" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}">{{m.name}}</button>
+</sc-for>
+</div>
+</fieldset>
+
+<fieldset style="margin: 0; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px">
+<legend style="padding: 0 8px; margin-left: -8px; font-size: 16px; font-weight: 600"><span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: var(--surface); font-size: 13px; margin-right: 8px">3</span>Subconjuntos</legend>
+<p style="margin: 0 0 12px; font-size: 13px; color: var(--muted)">Selecione um ou mais.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<sc-for list="{{subsets}}" as="c" hint-placeholder-count="4">
+<button type="button" class="{{c.cls}}" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}">
+<sc-if value="{{c.pressed}}" hint-placeholder-val="{{ false }}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>
+</sc-if>
+{{c.name}}</button>
+</sc-for>
+</div>
+</fieldset>
+
+<sc-if value="{{corretiva}}" hint-placeholder-val="{{ true }}">
+<fieldset style="margin: 0; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px">
+<legend style="padding: 0 8px; margin-left: -8px; font-size: 16px; font-weight: 600"><span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: var(--surface); font-size: 13px; margin-right: 8px">4</span>Problema <span style="color: var(--danger-text); margin-left: 4px" aria-hidden="true">*</span></legend>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px">
+<sc-for list="{{problemas}}" as="p" hint-placeholder-count="3">
+<button type="button" class="{{p.cls}}" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}">{{p.label}}</button>
+</sc-for>
+</div>
+</fieldset>
+</sc-if>
+
+<fieldset style="margin: 0; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px">
+<legend style="padding: 0 8px; margin-left: -8px; font-size: 16px; font-weight: 600"><span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: var(--surface); font-size: 13px; margin-right: 8px">5</span>Quem</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px">
+<div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 6px">
+<label for="f-tecnico" style="font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10h3v-3l-3.5-3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1-3 3l-6-6a6 6 0 0 1-8-8l3.5 3.5"></path></svg>
+Técnico <span style="color: var(--danger-text)" aria-hidden="true">*</span></label>
+<select id="f-tecnico" class="inp" value="{{tecnico}}" onChange="{{onTecnico}}">
+<option value="">Selecionar</option>
+<sc-for list="{{tecnicos}}" as="o" hint-placeholder-count="3">
+<option value="{{o.value}}">{{o.label}}</option>
+</sc-for>
+</select>
+</div>
+<div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 6px">
+<label for="f-operador" style="font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15a8 8 0 0 1 16 0"></path><rect x="2" y="15" width="20" height="3" rx="1"></rect><path d="M10 7.3V15M14 7.3V15"></path></svg>
+Operador</label>
+<select id="f-operador" class="inp" value="{{operador}}" onChange="{{onOperador}}">
+<option value="">Selecionar</option>
+<sc-for list="{{operadores}}" as="o" hint-placeholder-count="2">
+<option value="{{o.value}}">{{o.label}}</option>
+</sc-for>
+</select>
+</div>
+</div>
+<div style="margin-top: 8px">
+<sc-if value="{{showNewOp}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 8px">
+<div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 6px">
+<label for="f-novo-op" style="font-size: 13px; font-weight: 500">Nome do novo operador</label>
+<input id="f-novo-op" class="inp" type="text" value="{{newOpName}}" onChange="{{onNewOpName}}">
+</div>
+<button type="button" class="ghost" onClick="{{addOperator}}">Adicionar</button>
+<button type="button" class="linkbtn" onClick="{{toggleNewOp}}">Cancelar</button>
+</div>
+</sc-if>
+<sc-if value="{{hideNewOp}}" hint-placeholder-val="{{ true }}">
+<button type="button" class="linkbtn" onClick="{{toggleNewOp}}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+Novo operador</button>
+</sc-if>
+</div>
+</fieldset>
+
+<fieldset style="margin: 0; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px">
+<legend style="padding: 0 8px; margin-left: -8px; font-size: 16px; font-weight: 600"><span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: var(--surface); font-size: 13px; margin-right: 8px">6</span>Horários <span style="color: var(--danger-text); margin-left: 4px" aria-hidden="true">*</span></legend>
+<div style="display: flex; flex-wrap: wrap; gap: 20px 40px; margin-top: 8px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 500">Início</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<input class="inp" type="date" aria-label="Data de início" value="{{startDate}}" onChange="{{onStartDate}}" style="width: 160px">
+<input class="inp" type="time" aria-label="Hora de início" value="{{startTime}}" onChange="{{onStartTime}}" style="width: 120px">
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 500">Fim</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<input class="inp" type="date" aria-label="Data de fim" value="{{endDate}}" onChange="{{onEndDate}}" style="width: 160px">
+<input class="inp" type="time" aria-label="Hora de fim" value="{{endTime}}" onChange="{{onEndTime}}" style="width: 120px">
+<button type="button" class="ghost" onClick="{{setNow}}">Agora</button>
+</div>
+</div>
+</div>
+<sc-if value="{{timeError}}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="margin-top: 16px; display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 8px; background: var(--danger-bg); color: var(--danger-text); font-weight: 500">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg>
+O fim está antes do início. Confira as datas.
+</div>
+</sc-if>
+<sc-if value="{{longDur}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="margin-top: 16px; display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-text); font-weight: 500">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.01"></path></svg>
+A duração passa de 12 horas. Confira os horários.
+</div>
+</sc-if>
+<div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px; background: var(--bg)">
+<span style="color: var(--muted)">Tempo decorrido</span>
+<span style="font-weight: 600; font-size: 17px">{{elapsedText}}</span>
+</div>
+</fieldset>
+
+<fieldset style="margin: 0; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px">
+<legend style="padding: 0 8px; margin-left: -8px; font-size: 16px; font-weight: 600"><span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: var(--surface); font-size: 13px; margin-right: 8px">7</span>Serviço realizado <span style="color: var(--danger-text); margin-left: 4px" aria-hidden="true">*</span></legend>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px">
+<sc-for list="{{servicos}}" as="v" hint-placeholder-count="10">
+<button type="button" class="{{v.cls}}" aria-pressed="{{v.pressed}}" onClick="{{v.pick}}">{{v.label}}</button>
+</sc-for>
+</div>
+<div style="margin-top: 8px">
+<sc-if value="{{showDesc}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px">
+<label for="f-desc" style="font-size: 13px; font-weight: 500">Descrição (opcional)</label>
+<textarea id="f-desc" class="inp" rows="3" value="{{descricao}}" onChange="{{onDescricao}}" style="height: auto; padding: 10px 12px; resize: vertical; width: 100%"></textarea>
+</div>
+</sc-if>
+<sc-if value="{{hideDesc}}" hint-placeholder-val="{{ true }}">
+<button type="button" class="linkbtn" onClick="{{toggleDesc}}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+Adicionar descrição</button>
+</sc-if>
+</div>
+</fieldset>
+
+</form>
+
+<aside aria-label="Resumo" style="flex: 1 1 300px; min-width: 280px; display: flex; flex-direction: column; gap: 16px">
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px 24px">
+<h2 style="margin: 0 0 12px; font-size: 16px; font-weight: 600">Resumo</h2>
+<dl style="margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 10px 12px; font-size: 14px">
+<dt style="color: var(--muted)">Tipo</dt><dd style="margin: 0; font-weight: 500">{{sumTipo}}</dd>
+<dt style="color: var(--muted)">Máquina</dt><dd style="margin: 0; font-weight: 500">{{sumMachine}}</dd>
+<dt style="color: var(--muted)">Subconjuntos</dt><dd style="margin: 0; font-weight: 500">{{sumSubsets}}</dd>
+<sc-if value="{{corretiva}}" hint-placeholder-val="{{ true }}">
+<dt style="color: var(--muted)">Problema</dt><dd style="margin: 0; font-weight: 500">{{sumProblema}}</dd>
+</sc-if>
+<dt style="color: var(--muted)">Serviço</dt><dd style="margin: 0; font-weight: 500">{{sumServico}}</dd>
+<dt style="color: var(--muted)">Técnico</dt><dd style="margin: 0; font-weight: 500">{{sumTecnico}}</dd>
+<dt style="color: var(--muted)">Operador</dt><dd style="margin: 0; font-weight: 500">{{sumOperador}}</dd>
+<dt style="color: var(--muted)">Início</dt><dd style="margin: 0; font-weight: 500">{{sumStart}}</dd>
+<dt style="color: var(--muted)">Fim</dt><dd style="margin: 0; font-weight: 500">{{sumEnd}}</dd>
+<dt style="color: var(--muted)">Duração</dt><dd style="margin: 0; font-weight: 500">{{elapsedText}}</dd>
+</dl>
+
+<sc-if value="{{showMissing}}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="margin-top: 16px; padding: 12px 14px; border-radius: 8px; background: var(--danger-bg); color: var(--danger-text); font-weight: 500; font-size: 14px">Falta preencher: {{missingText}}.</div>
+</sc-if>
+
+<sc-if value="{{saved}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 8px; background: var(--ok-bg); color: var(--ok-text); font-weight: 500">
+<span style="display: inline-flex; align-items: center; gap: 8px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>
+Manutenção registrada</span>
+<button type="button" class="ghost" onClick="{{reset}}" style="color: var(--ok-text); border-color: var(--ok-text)">Registrar outra</button>
+</div>
+</sc-if>
+
+<sc-if value="{{notSaved}}" hint-placeholder-val="{{ true }}">
+<div style="margin-top: 20px">
+<button type="button" class="primary" onClick="{{onSave}}">Salvar manutenção</button>
+</div>
+</sc-if>
+</div>
+</aside>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+const MACHINES = [
+  { id: 'nova', name: 'Nova Bloc', subsets: ['Subconjunto A', 'Subconjunto B', 'Subconjunto C', 'Subconjunto D'] },
+  { id: 'm2', name: 'Máquina 2', subsets: ['Subconjunto E', 'Subconjunto F', 'Subconjunto G'] }
+];
+const PROBLEMAS = ['Mecânico', 'Elétrico', 'Outro'];
+const SERVICOS = ['Inspeção', 'Lubrificação', 'Substituição', 'Ajuste', 'Limpeza', 'Reparo', 'Instalação', 'Configuração', 'Calibração', 'Modificação'];
+const TECNICOS = ['Técnico 1', 'Técnico 2', 'Técnico 3'];
+const OPERADORES = ['Operador 1', 'Operador 2'];
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function fmtDate(d) {
+  if (!d) return '';
+  const p = d.split('-');
+  return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : d;
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      dark: false,
+      tipo: 'corretiva',
+      machine: 'nova',
+      subsets: ['Subconjunto A', 'Subconjunto C'],
+      problema: 'Mecânico',
+      tecnico: '',
+      operador: '',
+      operadores: OPERADORES,
+      showNewOp: false,
+      newOpName: '',
+      startDate: '2026-11-23',
+      startTime: '14:10',
+      endDate: '2026-11-23',
+      endTime: '16:40',
+      servico: '',
+      descricao: '',
+      showDesc: false,
+      triedSave: false,
+      saved: false
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const corretiva = s.tipo === 'corretiva';
+    const machine = MACHINES.find((m) => m.id === s.machine) || MACHINES[0];
+
+    const tipos = [
+      { id: 'preventiva', label: 'Preventiva' },
+      { id: 'corretiva', label: 'Corretiva' }
+    ].map((t) => ({
+      label: t.label,
+      isPrev: t.id === 'preventiva',
+      isCorr: t.id === 'corretiva',
+      pressed: s.tipo === t.id,
+      cls: 'seg' + (s.tipo === t.id ? ' on' : ''),
+      pick: () => this.setState({ tipo: t.id, saved: false })
+    }));
+
+    const machines = MACHINES.map((m) => ({
+      name: m.name,
+      pressed: s.machine === m.id,
+      cls: 'seg' + (s.machine === m.id ? ' on' : ''),
+      pick: () => this.setState({ machine: m.id, subsets: [], saved: false })
+    }));
+
+    const subsets = machine.subsets.map((name) => {
+      const on = s.subsets.indexOf(name) >= 0;
+      return {
+        name,
+        pressed: on,
+        cls: 'chip' + (on ? ' on' : ''),
+        pick: () => {
+          const next = on ? s.subsets.filter((x) => x !== name) : s.subsets.concat([name]);
+          this.setState({ subsets: next, saved: false });
+        }
+      };
+    });
+
+    const problemas = PROBLEMAS.map((label) => ({
+      label,
+      pressed: s.problema === label,
+      cls: 'chip' + (s.problema === label ? ' on' : ''),
+      pick: () => this.setState({ problema: label, saved: false })
+    }));
+
+    const servicos = SERVICOS.map((label) => ({
+      label,
+      pressed: s.servico === label,
+      cls: 'chip' + (s.servico === label ? ' on' : ''),
+      pick: () => this.setState({ servico: label, saved: false })
+    }));
+
+    const start = new Date(s.startDate + 'T' + s.startTime);
+    const end = new Date(s.endDate + 'T' + s.endTime);
+    const diff = (end.getTime() - start.getTime()) / 60000;
+    const finite = isFinite(diff);
+    const validTime = finite && diff > 0;
+    const timeError = finite && diff <= 0;
+    const longDur = validTime && diff > 720;
+    let elapsedText = '—';
+    if (validTime) {
+      const h = Math.floor(diff / 60);
+      const m = Math.round(diff % 60);
+      elapsedText = h > 0 ? h + ' h ' + m + ' min' : m + ' min';
+    }
+
+    const missing = [];
+    if (!s.tecnico) missing.push('técnico');
+    if (corretiva && !s.problema) missing.push('problema');
+    if (!validTime) missing.push('horários');
+    if (!s.servico.trim()) missing.push('serviço realizado');
+
+    const subsetsText = s.subsets.length ? s.subsets.join(', ') : 'Nenhum';
+
+    return {
+      rootClass: s.dark ? 't-dark' : 't-light',
+      dark: s.dark,
+      light: !s.dark,
+      themeLabel: s.dark ? 'Modo claro' : 'Modo escuro',
+      toggleTheme: () => this.setState({ dark: !s.dark }),
+
+      corretiva,
+      tipos,
+      machines,
+      subsets,
+      problemas,
+      servicos,
+      sumServico: s.servico || '—',
+
+      tecnico: s.tecnico,
+      operador: s.operador,
+      tecnicos: TECNICOS.map((t) => ({ value: t, label: t })),
+      operadores: s.operadores.map((o) => ({ value: o, label: o })),
+      onTecnico: (e) => this.setState({ tecnico: e.target.value, saved: false }),
+      onOperador: (e) => this.setState({ operador: e.target.value, saved: false }),
+      showNewOp: s.showNewOp,
+      hideNewOp: !s.showNewOp,
+      newOpName: s.newOpName,
+      toggleNewOp: () => this.setState({ showNewOp: !s.showNewOp, newOpName: '' }),
+      onNewOpName: (e) => this.setState({ newOpName: e.target.value }),
+      addOperator: () => {
+        const name = s.newOpName.trim();
+        if (!name) return;
+        this.setState({
+          operadores: s.operadores.concat([name]),
+          operador: name,
+          showNewOp: false,
+          newOpName: ''
+        });
+      },
+
+      startDate: s.startDate,
+      startTime: s.startTime,
+      endDate: s.endDate,
+      endTime: s.endTime,
+      onStartDate: (e) => this.setState({ startDate: e.target.value, saved: false }),
+      onStartTime: (e) => this.setState({ startTime: e.target.value, saved: false }),
+      onEndDate: (e) => this.setState({ endDate: e.target.value, saved: false }),
+      onEndTime: (e) => this.setState({ endTime: e.target.value, saved: false }),
+      setNow: () => {
+        const n = new Date();
+        this.setState({
+          endDate: n.getFullYear() + '-' + pad(n.getMonth() + 1) + '-' + pad(n.getDate()),
+          endTime: pad(n.getHours()) + ':' + pad(n.getMinutes()),
+          saved: false
+        });
+      },
+      timeError,
+      longDur,
+      elapsedText,
+
+      servico: s.servico,
+      onServico: (e) => this.setState({ servico: e.target.value, saved: false }),
+      descricao: s.descricao,
+      onDescricao: (e) => this.setState({ descricao: e.target.value }),
+      showDesc: s.showDesc,
+      hideDesc: !s.showDesc,
+      toggleDesc: () => this.setState({ showDesc: true }),
+
+      sumTipo: corretiva ? 'Corretiva' : 'Preventiva',
+      sumMachine: machine.name,
+      sumSubsets: subsetsText,
+      sumProblema: s.problema || '—',
+      sumTecnico: s.tecnico || '—',
+      sumOperador: s.operador || '—',
+      sumStart: fmtDate(s.startDate) + ' ' + s.startTime,
+      sumEnd: fmtDate(s.endDate) + ' ' + s.endTime,
+
+      showMissing: s.triedSave && missing.length > 0 && !s.saved,
+      missingText: missing.join(', '),
+      saved: s.saved,
+      notSaved: !s.saved,
+      onSubmit: (e) => { e.preventDefault(); },
+      onSave: () => this.setState({ triedSave: true, saved: missing.length === 0 }),
+      reset: () => this.setState({
+        saved: false,
+        triedSave: false,
+        servico: '',
+        descricao: '',
+        showDesc: false,
+        subsets: [],
+        operador: ''
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

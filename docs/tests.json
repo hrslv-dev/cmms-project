@@ -1,0 +1,1126 @@
+{
+  "_leia_me": [
+    "Casos para testar POST /maintenances no /docs ou em outro cliente HTTP.",
+    "Cole só o conteúdo de \"body\": os outros campos são explicação e seriam recusados (extra_forbidden).",
+    "Ids pensados para os dados fictícios do cmms_test: máquina 1 tem os subconjuntos 1 a 4; máquina 2, os subconjuntos 5 a 7; máquina 3 não tem subconjuntos; técnicos 1 a 3; operadores 1 e 2.",
+    "Confira os ids com GET /machines, /technicians, /operators e /machines/{id}/subsets.",
+    "Cada caso com 201 grava uma manutenção de verdade no cmms_test.",
+    "Erros vêm com code, message e details; esperado.code é null nos casos de sucesso.",
+    "Casos com \"falha_conhecida\" descrevem o comportamento correto, que ainda não acontece; no pytest rodam como falha esperada."
+  ],
+  "casos": [
+    {
+      "caso": "Corretiva completa",
+      "comentario": "Todos os campos preenchidos. Subconjunto 3 (Motor principal) pertence à máquina 1.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Preventiva sem problema",
+      "comentario": "Em preventiva, problem é opcional e pode ser omitido.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Lubrificação",
+        "maintenance_type": "Preventiva",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Preventiva com problema",
+      "comentario": "Em preventiva, problem também pode ser informado, desde que seja uma das três categorias.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Inspeção",
+        "maintenance_type": "Preventiva",
+        "problem": "Elétrico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Mínimo obrigatório",
+      "comentario": "Só os obrigatórios. Sem operador, descrição e subconjuntos: operator_id e description voltam null e subset_ids volta [].",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Limpeza",
+        "maintenance_type": "Preventiva"
+      }
+    },
+    {
+      "caso": "Operador null explícito",
+      "comentario": "Enviar operator_id: null equivale a omitir: a manutenção fica sem operador.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": null,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Vários subconjuntos",
+      "comentario": "Os quatro subconjuntos da máquina 1. A resposta os devolve em ordem crescente de id.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          4,
+          1,
+          3,
+          2
+        ]
+      }
+    },
+    {
+      "caso": "Subconjuntos repetidos",
+      "comentario": "O schema remove ids repetidos: [3, 3, 1] é gravado como [3, 1] e devolvido como [1, 3].",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3,
+          3,
+          1
+        ]
+      }
+    },
+    {
+      "caso": "Cruza a meia-noite",
+      "comentario": "Começa às 22h de um dia e termina às 2h do seguinte: elapsed_time = PT4H.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-23T22:00:00-03:00",
+        "finished_at": "2026-11-24T02:00:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Vários dias",
+      "comentario": "Dura 2 dias e 3 horas: elapsed_time = P2DT3H.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-20T08:00:00-03:00",
+        "finished_at": "2026-11-22T11:00:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Início igual ao fim",
+      "comentario": "Duração zero é aceita pelo backend (o protótipo da tela recusa; divergência adiada). elapsed_time = PT0S.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T14:10:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Fusos diferentes",
+      "comentario": "Início em Brasília (-03:00) e fim em UTC (Z). 16:40 em UTC são 13:40 em Brasília: duração de 3h30.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T10:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00Z",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Descrição com espaços",
+      "comentario": "Espaços nas pontas são removidos: volta \"Ajuste da correia\".",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "   Ajuste da correia   ",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Descrição em branco",
+      "comentario": "Descrição só com espaços vira null.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "   ",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Início no limite mínimo",
+      "comentario": "01/01/2000 00:00 UTC é o início mais antigo aceito.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2000-01-01T00:00:00Z",
+        "finished_at": "2000-01-01T02:00:00Z",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Máquina sem subconjuntos",
+      "comentario": "A máquina 3 não tem subconjuntos; registrar sem subset_ids funciona.",
+      "esperado": {
+        "status": 201,
+        "code": null
+      },
+      "body": {
+        "machine_id": 3,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": []
+      }
+    },
+    {
+      "caso": "Máquina inexistente",
+      "comentario": "machine_id que não existe. Por decisão do projeto, id inexistente no corpo responde 404.",
+      "esperado": {
+        "status": 404,
+        "code": "not_found"
+      },
+      "body": {
+        "machine_id": 999,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": []
+      }
+    },
+    {
+      "caso": "Técnico inexistente",
+      "comentario": "technician_id que não existe.",
+      "esperado": {
+        "status": 404,
+        "code": "not_found"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 999,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Operador inexistente",
+      "comentario": "operator_id que não existe.",
+      "esperado": {
+        "status": 404,
+        "code": "not_found"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 999,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Subconjunto inexistente",
+      "comentario": "O subconjunto 999 não existe. Nada é gravado, nem a manutenção.",
+      "esperado": {
+        "status": 404,
+        "code": "not_found"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3,
+          999
+        ]
+      }
+    },
+    {
+      "caso": "Subconjunto de outra máquina",
+      "comentario": "O subconjunto 5 (Painel elétrico) é da máquina 2. A manutenção inteira é desfeita.",
+      "esperado": {
+        "status": 422,
+        "code": "subset_machine_mismatch"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "caso": "Fim no futuro",
+      "comentario": "finished_at depois de agora (+5 min de tolerância): manutenção ainda não encerrada.",
+      "esperado": {
+        "status": 422,
+        "code": "invalid_maintenance_period"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2099-01-01T08:00:00-03:00",
+        "finished_at": "2099-01-01T10:00:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Início antes de 2000",
+      "comentario": "started_at anterior a 01/01/2000 é recusado (protege contra erros como 0226).",
+      "esperado": {
+        "status": 422,
+        "code": "invalid_maintenance_period"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "1999-12-31T23:59:59Z",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Ano digitado errado",
+      "comentario": "0226 em vez de 2026.",
+      "esperado": {
+        "status": 422,
+        "code": "invalid_maintenance_period"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "0226-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Sem machine_id",
+      "comentario": "machine_id é obrigatório. details.errors aponta o campo.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Sem technician_id",
+      "comentario": "technician_id é obrigatório. details.errors aponta o campo.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Sem started_at",
+      "comentario": "started_at é obrigatório. details.errors aponta o campo.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Sem finished_at",
+      "comentario": "finished_at é obrigatório. details.errors aponta o campo.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Sem service",
+      "comentario": "service é obrigatório. details.errors aponta o campo.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Sem maintenance_type",
+      "comentario": "maintenance_type é obrigatório. details.errors aponta o campo.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Corretiva sem problema",
+      "comentario": "Em corretiva, problem é obrigatório. O erro vem com field: null por envolver dois campos.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Corretiva com problema null",
+      "comentario": "Mesmo caso, com null explícito.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": null,
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Problema vazio",
+      "comentario": "\"\" não é uma categoria. O front deve omitir ou enviar null.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Problema fora da lista",
+      "comentario": "Só 'Mecânico', 'Elétrico' ou 'Outro'.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Hidráulico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Serviço fora da lista",
+      "comentario": "Só as 10 opções, com acento e maiúscula exatos.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Serviço sem acento",
+      "comentario": "'Inspecao' não é 'Inspeção'.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Inspecao",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Tipo inválido",
+      "comentario": "Só 'Corretiva' ou 'Preventiva'.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Preditiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Fim antes do início",
+      "comentario": "finished_at anterior a started_at.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T14:00:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Horário sem fuso",
+      "comentario": "Sem -03:00 ou Z, o horário seria ambíguo.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Só data",
+      "comentario": "Falta a hora.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Data inexistente",
+      "comentario": "30 de fevereiro não existe.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-02-30T14:10:00-03:00",
+        "finished_at": "2026-03-01T10:00:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Data como número",
+      "comentario": "Timestamp Unix é recusado: a data precisa vir como texto com fuso.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": 1763990000,
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Fim null",
+      "comentario": "Só se registra manutenção encerrada.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": null,
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Id zero",
+      "comentario": "Ids precisam ser maiores que 0.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 0,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Id negativo em subconjunto",
+      "comentario": "Cada item de subset_ids precisa ser maior que 0; field aponta subset_ids.1.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3,
+          -1
+        ]
+      }
+    },
+    {
+      "caso": "Id como texto",
+      "comentario": "machine_id precisa ser número inteiro.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": "abc",
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "subset_ids null",
+      "comentario": "Envie [] ou omita; null não é lista.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": null
+      }
+    },
+    {
+      "caso": "Campo extra id",
+      "comentario": "Não se envia id: o banco gera.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ],
+        "id": 10
+      }
+    },
+    {
+      "caso": "Campo extra elapsed_time",
+      "comentario": "A duração é calculada pelo banco.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ],
+        "elapsed_time": "PT2H"
+      }
+    },
+    {
+      "caso": "Coluna type em vez de maintenance_type",
+      "comentario": "Na API o campo se chama maintenance_type.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ],
+        "type": "Corretiva"
+      }
+    },
+    {
+      "caso": "Descrição não textual",
+      "comentario": "description precisa ser texto.",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": 1,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": 123,
+        "subset_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "caso": "Id booleano",
+      "comentario": "true não é um id. Hoje é convertido em 1 e grava na máquina 1 (pendência da revisão).",
+      "falha_conhecida": "Revisão de 25/11/2026: true é convertido em id 1",
+      "esperado": {
+        "status": 422,
+        "code": "validation_error"
+      },
+      "body": {
+        "machine_id": true,
+        "technician_id": 1,
+        "operator_id": 1,
+        "started_at": "2026-11-24T14:10:00-03:00",
+        "finished_at": "2026-11-24T16:40:00-03:00",
+        "service": "Reparo",
+        "maintenance_type": "Corretiva",
+        "problem": "Mecânico",
+        "description": "Troca do rolamento do motor",
+        "subset_ids": [
+          3
+        ]
+      }
+    }
+  ]
+}

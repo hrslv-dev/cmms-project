@@ -23,7 +23,7 @@ O histórico do Git mostra o desenvolvimento em etapas:
 3. **Mapeamento do domínio:** modelos SQLAlchemy para máquinas, componentes, técnicos, operadores e histórico de manutenção, com chaves, relacionamentos e restrições compatíveis com o esquema PostgreSQL usado pelo projeto.
 4. **Acesso a dados:** CRUD compartilhado em `BaseRepository` e consultas próprias para cada entidade, incluindo filtros do histórico.
 5. **Verificação dos repositories:** criação de testes de integração PostgreSQL que verificam inclusão, leitura, atualização, remoção e consultas específicas. Os casos fazem rollback ao terminar.
-6. **Persistência auxiliar Excel:** configuração separada para abrir workbooks `.xlsx` pelo dialeto SQLAlchemy, documentada como apoio a importações, exportações ou relatórios pequenos.
+6. **Persistência auxiliar Excel:** configuração separada para abrir workbooks `.xlsx` pelo dialeto SQLAlchemy, documentada como apoio a importações, exportações ou relatórios pequenos. *Removida do projeto em 23/11/2026.*
 7. **Primeiro fluxo HTTP:** adição de uma API FastAPI para registrar uma manutenção, com validação Pydantic, service, sessão por requisição e persistência.
 
 ## O que existe hoje
@@ -48,16 +48,12 @@ O único endpoint HTTP implementado é:
 
 O schema de entrada restringe tipo a `Corretiva` ou `Preventiva`, serviço a uma lista de dez categorias e IDs a números positivos. Também rejeita campos extras e verifica que a hora final, quando informada, seja posterior à hora inicial. Em caso de erro de persistência, o service reverte a transação e propaga a exceção.
 
-### Excel
-
-A integração Excel é independente da engine PostgreSQL e ainda não aparece conectada aos fluxos de negócio. As opções incluem caminho do workbook, leitura de fórmulas, sanitização e bloqueio de arquivo. A documentação ressalta que Excel é armazenamento auxiliar e não oferece as garantias de concorrência e integridade de um banco relacional.
-
 ### Testes e documentação
 
 - `tests/test_repositories_crud.py` contém cinco testes de integração: máquinas, componentes, técnicos, operadores e histórico de manutenção.
 - `tests/run_repositories_crud.py` oferece uma saída explicativa para executar essa suíte.
 - A suíte depende de um PostgreSQL configurado no ambiente. O histórico de commits registra CRUD como testado; a suíte não foi reexecutada nesta revisão.
-- `docs/requirements.md`, `ESTRUTURA.md` e `docs/excel-dialect.md` descrevem requisitos, organização e integração Excel.
+- `docs/requirements.md` e `ESTRUTURA.md` descrevem requisitos e organização.
 - O `README.md` está vazio. A pasta `frontend/` existe, mas não contém arquivos de implementação no repositório.
 
 ## Lacunas e diferenças em relação aos requisitos
